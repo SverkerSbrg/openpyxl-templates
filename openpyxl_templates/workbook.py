@@ -1,4 +1,4 @@
-from style import CellStyle
+from openpyxl_templates.style import CellStyle
 
 
 class WorkbookTemplate:

@@ -5,9 +5,9 @@ from openpyxl.cell import WriteOnlyCell
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.datavalidation import DataValidation
 
-from style import CellStyle
-from exceptions import IllegalMaxLength, MaxLengthExceeded, UnableToParseFloat, UnableToParseInt, \
-    IllegalChoice, UnableToParseDatetime, UnableToParseDate, UnableToParseTime, BlankNotAllowed, UnableToParseBool
+from openpyxl_templates.exceptions import BlankNotAllowed, IllegalMaxLength, MaxLengthExceeded, UnableToParseBool, \
+    UnableToParseFloat, UnableToParseInt, IllegalChoice, UnableToParseDatetime, UnableToParseDate, UnableToParseTime
+from openpyxl_templates.style import CellStyle
 
 
 class Column:

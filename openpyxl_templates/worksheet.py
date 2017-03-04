@@ -6,8 +6,8 @@ from openpyxl.utils import column_index_from_string
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 
-from style import CellStyle
-from exceptions import OpenpyxlTemplateCellException, CellExceptions
+from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions
+from openpyxl_templates.style import CellStyle
 
 MAX_COLUMN_INDEX = column_index_from_string("XFD")
 

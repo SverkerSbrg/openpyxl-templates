@@ -8,11 +8,11 @@ from openpyxl.styles import Alignment
 from openpyxl.styles import Border
 from openpyxl.styles import Font
 
-from columns import IntegerColumn, ChoiceColumn, DateTimeColumn, TimeColumn, CharColumn
-from style import CellStyle
-from utils import SolidFill
-from workbook import WorkbookTemplate
-from worksheet import SheetTemplate, RowExceptionPolicy
+from openpyxl_templates.columns import CharColumn, IntegerColumn, ChoiceColumn, DateTimeColumn, TimeColumn
+from openpyxl_templates.style import CellStyle
+from openpyxl_templates.utils import SolidFill
+from openpyxl_templates.workbook import WorkbookTemplate
+from openpyxl_templates.worksheet import SheetTemplate, RowExceptionPolicy
 
 BASE_DIR = dirname(__file__)
 
