@@ -22,9 +22,9 @@ class WorkbookTemplate:
 
         for sheet in self.sheets:
             sheet.style = CellStyle.merge(self.style, sheet.style)
-            sheet.header_style = CellStyle.merge(self.style, sheet.header_style)
-            sheet.title_style = CellStyle.merge(self.style, sheet.title_style)
-            sheet.description_style = CellStyle.merge(self.style, sheet.description_style)
+            sheet.header_style = CellStyle.merge(self.header_style, sheet.header_style)
+            sheet.title_style = CellStyle.merge(self.header_style, sheet.header_style)
+            sheet.description_style = CellStyle.merge(self.description_style, sheet.description_style)
             sheet.rebase_column_styles()
 
         self._sheet_map = {sheet.name: sheet for sheet in self.sheets}

@@ -1,12 +1,15 @@
 from datetime import datetime
 from itertools import chain
 from os.path import dirname, join
+from timeit import timeit
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
+from openpyxl.cell import WriteOnlyCell
 from openpyxl.styles import Alignment
 from openpyxl.styles import Border
 from openpyxl.styles import Font
+from openpyxl.styles import NamedStyle
 
 from openpyxl_templates.columns import CharColumn, IntegerColumn, ChoiceColumn, DateTimeColumn, TimeColumn
 from openpyxl_templates.style import CellStyle
@@ -110,11 +113,58 @@ test_output.write_sheet("TestSheet", (
     TestObject(4, 5, 6, "ADD", datetime.now()),
 ))
 
-output_workbook.save(join(BASE_DIR, "test_output.xlsx").replace('\\', '/'))
-
 alignment = Alignment(wrap_text=False)
 border = Border()
 font = Font(size=24)
 
 for x in chain(alignment, font):
     print(x)
+
+ws = output_workbook.create_sheet("test2")
+output_workbook.active = 3
+
+ws.column_dimensions["A"].fill = SolidFill("DDDDDD")
+
+
+def unstyled():
+    ws = output_workbook.create_sheet("unstyled")
+    fill = SolidFill("DDDDDD")
+    font = Font(size=10, bold=True)
+    alignment = Alignment(horizontal="center")
+    for i in range(0, 100000):
+        cell = WriteOnlyCell(value=i, ws=ws)
+        ws.append((cell,))
+
+
+def styled():
+    ws = output_workbook.create_sheet("styled")
+    fill = SolidFill("ff00DD")
+    font = Font(size=10, bold=True)
+    alignment = Alignment(horizontal="center")
+    for i in range(0, 100000):
+        cell = WriteOnlyCell(value=i, ws=ws)
+        cell.fill = fill
+        cell.font = font
+        cell.alignment = alignment
+        ws.append((cell,))
+
+
+def namedstyle():
+    ws = output_workbook.create_sheet("namedstyle")
+    namedstyle = NamedStyle(
+        name="test_named_style",
+        fill=SolidFill("0000DD"),
+        font=Font(size=10, bold=True),
+        alignment=Alignment(horizontal="center")
+    )
+    for i in range(0, 100000):
+        cell = WriteOnlyCell(value=i, ws=ws)
+        cell.style = namedstyle
+        ws.append((cell,))
+
+
+print("Unstyled:", timeit(unstyled, number=1))
+print("Styled:", timeit(styled, number=1))
+print("Namedstyle:", timeit(namedstyle, number=1))
+
+output_workbook.save(join(BASE_DIR, "test_output.xlsx").replace('\\', '/'))

@@ -98,4 +98,56 @@ class CellStyle:
         }
 
 
+class ColumnStyle:
+    base = None
+    header = None
+    cell = None
 
+    _style_attrs = ("base", "cell", "header")
+
+    def __init__(self, base=None, header=None, cell=None):
+        self.base = CellStyle.merge(self.base, base)
+        self.cell = CellStyle.merge(self.base, self.cell, cell)
+        self.header = CellStyle.merge(self.base, self.header, header)
+
+    @classmethod
+    def merge(cls, *sheet_styles):
+        result = SheetStyle()
+        for attr in cls._style_attrs:
+            setattr(result, attr, CellStyle.merge(
+                *[getattr(style, attr, None) for style in sheet_styles if style]
+            ))
+        return result
+
+    def style_cell(self, cell):
+        self.cell.style_cell(cell)
+
+    def style_header(self, cell):
+        self.header.style_cell(cell)
+
+
+class SheetStyle(ColumnStyle):
+    empty = None
+    title = None
+
+    _style_attrs = ColumnStyle._style_attrs + ("empty", "title")
+
+    def __init__(self, empty=None, title=None, **kwargs):
+        super().__init__(**kwargs)
+
+        self.empty = CellStyle.merge(self.base, self.empty, empty)
+        self.title = CellStyle.merge(self.base, self.title, title)
+
+    @property
+    def column_style(self):
+        return ColumnStyle(
+            base=self.base,
+            header=self.header,
+            cell=self.header
+        )
+
+    def style_empty(self, cell):
+        self.empty.style_cell(cell)
+
+    def style_title(self, cell):
+        self.title.style_cell(cell)
