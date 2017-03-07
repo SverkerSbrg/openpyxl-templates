@@ -126,45 +126,51 @@ output_workbook.active = 3
 ws.column_dimensions["A"].fill = SolidFill("DDDDDD")
 
 
-def unstyled():
-    ws = output_workbook.create_sheet("unstyled")
-    fill = SolidFill("DDDDDD")
-    font = Font(size=10, bold=True)
-    alignment = Alignment(horizontal="center")
-    for i in range(0, 100000):
-        cell = WriteOnlyCell(value=i, ws=ws)
-        ws.append((cell,))
+# def unstyled():
+#     ws = output_workbook.create_sheet("unstyled")
+#     fill = SolidFill("DDDDDD")
+#     font = Font(size=10, bold=True)
+#     alignment = Alignment(horizontal="center")
+#     for i in range(0, 100000):
+#         cell = WriteOnlyCell(value=i, ws=ws)
+#         ws.append((cell,))
+#
+#
+# def styled():
+#     ws = output_workbook.create_sheet("styled")
+#     fill = SolidFill("ff00DD")
+#     font = Font(size=10, bold=True)
+#     alignment = Alignment(horizontal="center")
+#     for i in range(0, 100000):
+#         cell = WriteOnlyCell(value=i, ws=ws)
+#         cell.fill = fill
+#         cell.font = font
+#         cell.alignment = alignment
+#         ws.append((cell,))
+#
+#
+# def namedstyle():
+#     ws = output_workbook.create_sheet("namedstyle")
+#     namedstyle = NamedStyle(
+#         name="test_named_style",
+#         fill=SolidFill("0000DD"),
+#         font=Font(size=10, bold=True),
+#         alignment=Alignment(horizontal="center")
+#     )
+#     for i in range(0, 100000):
+#         cell = WriteOnlyCell(value=i, ws=ws)
+#         cell.style = namedstyle
+#         ws.append((cell,))
+#
+#
+# print("Unstyled:", timeit(unstyled, number=1))
+# print("Styled:", timeit(styled, number=1))
+# print("Namedstyle:", timeit(namedstyle, number=1))
 
 
-def styled():
-    ws = output_workbook.create_sheet("styled")
-    fill = SolidFill("ff00DD")
-    font = Font(size=10, bold=True)
-    alignment = Alignment(horizontal="center")
-    for i in range(0, 100000):
-        cell = WriteOnlyCell(value=i, ws=ws)
-        cell.fill = fill
-        cell.font = font
-        cell.alignment = alignment
-        ws.append((cell,))
+print(output_workbook.named_styles, type(output_workbook.named_styles))
+for style in output_workbook._named_styles:
+    print(type(style))
 
-
-def namedstyle():
-    ws = output_workbook.create_sheet("namedstyle")
-    namedstyle = NamedStyle(
-        name="test_named_style",
-        fill=SolidFill("0000DD"),
-        font=Font(size=10, bold=True),
-        alignment=Alignment(horizontal="center")
-    )
-    for i in range(0, 100000):
-        cell = WriteOnlyCell(value=i, ws=ws)
-        cell.style = namedstyle
-        ws.append((cell,))
-
-
-print("Unstyled:", timeit(unstyled, number=1))
-print("Styled:", timeit(styled, number=1))
-print("Namedstyle:", timeit(namedstyle, number=1))
 
 output_workbook.save(join(BASE_DIR, "test_output.xlsx").replace('\\', '/'))
