@@ -1,7 +1,5 @@
 from itertools import chain
 
-from openpyxl.styles import Alignment
-from openpyxl.styles import Font
 from openpyxl.styles import NamedStyle
 
 from openpyxl_templates.style import CellStyle
@@ -11,17 +9,19 @@ class WorkbookTemplate:
     sheets = None
     active_sheet = None
 
-    named_styles = None
+    styles = None
 
-    style=None
+    style = None
     header_style = None
     title_style = None
     description_style = None
 
-    def __init__(self, workbook, sheets=None, active_sheet=None, style=None, header_style=None, title_style=None, description_style=None):
+    def __init__(self, workbook, sheets=None, active_sheet=None, styles=None, style=None, header_style=None,
+                 title_style=None, description_style=None):
         self.workbook = workbook
         self.sheets = sheets or self.sheets or []
         self.active_sheet = active_sheet or self.active_sheet
+        self.styles = styles or self.styles or StyleSet()
 
         self.style = CellStyle.merge(self.style, style)
         self.header_style = CellStyle.merge(self.style, self.header_style, header_style)
@@ -62,111 +62,111 @@ class WorkbookTemplate:
                 return
 
 
-
-class NamedStyleWorkbookTemplate(WorkbookTemplate):
-    named_styles = None
-
-    def __init__(self, named_styles=None, *args, **kwargs):
-        super.__init__(*args, **kwargs)
-
-        self.named_styles = named_styles or self.named_styles or [
-            NamedStyle(name="Header", font=Font(bold=True)),
-            NamedStyle(name="Title", font=Font(size=20, bold=True)),
-            NamedStyle(name="Cell"),
-            NamedStyle(name="Normalx"),
-        ]
-
-        self._named_style_map = {style.name: style for style in self.named_styles}
-
-
-def serializable_to_dict(serializable):
-    object_class = serializable.__class__
-    values = {}
-    for attr in chain(object_class.__attrs__, object_class.__elements__):
-        value = getattr(serializable, attr)
-        if value is not None:
-            values[attr] = getattr(serializable, attr)
-    return values
-
-
-
-class InheritingFont(dict):
-    def __init__(self, name=None, sz=None, b=None, i=None, charset=None,
-                 u=None, strike=None, color=None, scheme=None, family=None, size=None,
-                 bold=None, italic=None, strikethrough=None, underline=None,
-                 vertAlign=None, outline=None, shadow=None, condense=None,
-                 extend=None):
+class ExtendedStyle(dict):
+    def __init__(self, base, name, font=None, fill=None, border=None, alignment=None, number_format=None,
+                 protection=None):
         super().__init__()
 
-        self["name"] = name
-        self["sz"] = sz
-        self["b"] = b
-        self["i"] = i
-        self["charset"] = charset
-        self["u"] = u
-        self["strike"] = strike
-        self["color"] = color
-        self["scheme"] = scheme
-        self["family"] = family
-        self["size"] = size
-        self["bold"] = bold
-        self["italic"] = italic
-        self["strikethrough"] = strikethrough
-        self["underline"] = underline
-        self["vertAlign"] = vertAlign
-        self["outline"] = outline
-        self["shadow"] = shadow
-        self["condense"] = condense
-        self["extend"] = extend
-
-    def get_font(self, base_font):
-        font_dict = serializable_to_dict(base_font)
-        font_dict.update(self)
-        return Font(**font_dict)
-
-
-class InheritingAlignment(dict):
-    def __init__(self, horizontal=None, vertical=None,
-                 textRotation=0, wrapText=None, shrinkToFit=None, indent=0, relativeIndent=0,
-                 justifyLastLine=None, readingOrder=0, text_rotation=None,
-                 wrap_text=None, shrink_to_fit=None, mergeCell=None):
-        super().__init__()
-
-        self[" horizontal"] =  horizontal
-        self[" vertical"] =  vertical
-        self["textRotation"] = textRotation
-        self["wrapText"] = wrapText
-        self["shrinkToFit"] = shrinkToFit
-        self["indent"] = indent
-        self["relativeIndent"] = relativeIndent
-        self["justifyLastLine"] = justifyLastLine
-        self["readingOrder"] = readingOrder
-        self["text_rotation"] = text_rotation
-        self["wrap_text"] = wrap_text
-        self["shrink_to_fit"] = shrink_to_fit
-        self["mergeCell"] = mergeCell
-
-    def get_alignment(self, base_alignment):
-        font_dict = serializable_to_dict(base_alignment)
-        font_dict.update(self)
-        return Alignment(**font_dict)
-
-
-
-class InheritingNamedStyle:
-    def __init__(self, inheriting_from=None, name=None, font=None, alignment=None):
+        self.base = base
         self.name = name
-        self.inheriting_from = inheriting_from
-
         self.font = font
-        self.alignmnet = alignment
-
-    # def get_named_style(self, workbook):
-    #     base_style =
-
-
-        # find base style, create new style, check if existing, add or use existing
+        self.fill = fill
+        self.border = border
+        self.alignment = alignment
+        self.number_format = number_format
+        self.protection = protection
 
 
+class StyleSet(dict):
+    DEFAULT_STYLES = "__default__", "__title__", "__header__", "__row__"
 
+    def __init__(self, *styles, __default__=None):
+        self.names = set()
+        self.style_hash_map = {}
+        super().__init__()
 
+        if __default__:
+            self[__default__.name] = __default__
+            style_names = set((style.name for style in styles))
+            for key in self.DEFAULT_STYLES:
+                if key not in style_names:
+                    self[key] = __default__
+
+        for style in styles:
+            self[style.name] = style
+
+    def __setitem__(self, key, style):
+        if type(key) != str:
+            raise Exception("Keys must be strings")
+
+        if key in self:
+            raise Exception("Duplicate key")
+
+        if style is not None:
+            if type(style) == ExtendedStyle:
+                style = self._extend_style(style)
+
+            if type(style) != NamedStyle:
+                raise ValueError("Must be named style")
+
+            style_hash = self._hash_style_without_name(style)
+            if style_hash in self.style_hash_map:
+                style = self.style_hash_map[style_hash]
+            else:
+                self.style_hash_map[style_hash] = style
+
+        super().__setitem__(key, style)
+
+    def __getitem__(self, item):
+        _type = type(item)
+        if _type == str:
+            try:
+                return super().__getitem__(item)
+            except KeyError:
+                return None
+
+        if _type not in (ExtendedStyle, NamedStyle):
+            raise Exception("Unknown type")
+
+        if item.name not in self:
+            self[item.name] = item
+
+        return super().__getitem__(item.name)
+
+    def _extend_style(self, extended_style):
+        base_style = self[extended_style.base]
+        if not base_style:
+            base_style = NamedStyle()
+
+        return NamedStyle(
+            name=extended_style.name,
+            number_format=extended_style.number_format or base_style.number_format,
+            fill=extended_style.fill or base_style.fill,
+            font=self._extend_serializable(base_style.font, extended_style.font),
+            border=self._extend_serializable(base_style.border, extended_style.border),
+            alignment=self._extend_serializable(base_style.alignment, extended_style.alignment),
+            protection=self._extend_serializable(base_style.protection, extended_style.protection),
+        )
+
+    def _extend_serializable(self, serializable, update):
+        object_class = type(serializable)
+        if object_class == type(update):
+            return update
+        kwargs = {}
+        object_class = type(serializable)
+        for attr in chain(object_class.__attrs__, object_class.__elements__):
+            kwargs[attr] = getattr(serializable, attr)
+
+        if update:
+            kwargs.update({key: value for key, value in update.items() if value is not None})
+        return object_class(**kwargs)
+
+    def _hash_style_without_name(self, style):
+        fields = []
+        for attr in NamedStyle.__elements__ + ("number_format",):
+            val = getattr(style, attr)
+            if isinstance(val, list):
+                val = tuple(val)
+            fields.append(val)
+
+        return hash(tuple(fields))

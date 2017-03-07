@@ -126,51 +126,70 @@ output_workbook.active = 3
 ws.column_dimensions["A"].fill = SolidFill("DDDDDD")
 
 
-# def unstyled():
-#     ws = output_workbook.create_sheet("unstyled")
-#     fill = SolidFill("DDDDDD")
-#     font = Font(size=10, bold=True)
-#     alignment = Alignment(horizontal="center")
-#     for i in range(0, 100000):
-#         cell = WriteOnlyCell(value=i, ws=ws)
-#         ws.append((cell,))
-#
-#
-# def styled():
-#     ws = output_workbook.create_sheet("styled")
-#     fill = SolidFill("ff00DD")
-#     font = Font(size=10, bold=True)
-#     alignment = Alignment(horizontal="center")
-#     for i in range(0, 100000):
-#         cell = WriteOnlyCell(value=i, ws=ws)
-#         cell.fill = fill
-#         cell.font = font
-#         cell.alignment = alignment
-#         ws.append((cell,))
-#
-#
-# def namedstyle():
-#     ws = output_workbook.create_sheet("namedstyle")
+TEST_COUNT = 50000
+
+def unstyled():
+    ws = output_workbook.create_sheet("unstyled")
+    fill = SolidFill("DDDDDD")
+    font = Font(size=10, bold=True)
+    alignment = Alignment(horizontal="center")
+    for i in range(0, TEST_COUNT):
+        cell = WriteOnlyCell(value=i, ws=ws)
+        ws.append((cell,))
+
+
+def styled():
+    ws = output_workbook.create_sheet("styled")
+    fill = SolidFill("ff00DD")
+    font = Font(size=10, bold=True)
+    alignment = Alignment(horizontal="center")
+    for i in range(0, TEST_COUNT):
+        cell = WriteOnlyCell(value=i, ws=ws)
+        cell.fill = fill
+        cell.font = font
+        cell.alignment = alignment
+        cell.number_format = "@"
+        ws.append((cell,))
+
+
+def namedstyle():
+    ws = output_workbook.create_sheet("namedstyle")
+    namedstyle = NamedStyle(
+        name="test_named_style",
+        fill=SolidFill("0000DD"),
+        font=Font(size=10, bold=True),
+        alignment=Alignment(horizontal="center"),
+        number_format="@"
+    )
+    for i in range(0, TEST_COUNT):
+        cell = WriteOnlyCell(value=i, ws=ws)
+        cell.style = namedstyle
+        ws.append((cell,))
+
+
+# def namedstyle_change_numberformat():
+#     ws = output_workbook.create_sheet("namedstyle_change_number_format")
 #     namedstyle = NamedStyle(
 #         name="test_named_style",
 #         fill=SolidFill("0000DD"),
 #         font=Font(size=10, bold=True),
-#         alignment=Alignment(horizontal="center")
+#         alignment=Alignment(horizontal="center"),
+#         number_format="@"
 #     )
 #     for i in range(0, 100000):
 #         cell = WriteOnlyCell(value=i, ws=ws)
 #         cell.style = namedstyle
+#         cell.number_format = "0.0"
 #         ws.append((cell,))
-#
-#
-# print("Unstyled:", timeit(unstyled, number=1))
-# print("Styled:", timeit(styled, number=1))
-# print("Namedstyle:", timeit(namedstyle, number=1))
 
+
+print("Unstyled:", timeit(unstyled, number=1))
+print("Styled:", timeit(styled, number=1))
+print("Namedstyle:", timeit(namedstyle, number=1))
+# print("Namedstyle, change:", timeit(namedstyle_change_numberformat, number=1))
 
 print(output_workbook.named_styles, type(output_workbook.named_styles))
 for style in output_workbook._named_styles:
     print(type(style))
-
 
 output_workbook.save(join(BASE_DIR, "test_output.xlsx").replace('\\', '/'))
