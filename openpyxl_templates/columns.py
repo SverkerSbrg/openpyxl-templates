@@ -2,20 +2,23 @@ from datetime import date, timedelta, time
 from datetime import datetime
 
 from openpyxl.cell import WriteOnlyCell
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, NamedStyle
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from openpyxl_templates.exceptions import BlankNotAllowed, IllegalMaxLength, MaxLengthExceeded, UnableToParseBool, \
     UnableToParseFloat, UnableToParseInt, IllegalChoice, UnableToParseDatetime, UnableToParseDate, UnableToParseTime
 from openpyxl_templates.style import CellStyle
+from openpyxl_templates.workbook import StyleSet, ExtendedStyle
 
 
 class Column:
     object_attr = None
     header = None
     width = None
-    style = None
-    header_style = None
+
+    row_style = StyleSet.DEFAULT_ROW_STYLE
+    header_style = StyleSet.DEFAULT_HEADER_STYLE
+
     hidden = False
     data_validation = None
     default_value = None
@@ -24,13 +27,20 @@ class Column:
 
     BLANK_VALUES = (None, "")
 
-    def __init__(self, object_attr=None, header=None, width=None, style=None, header_style=None, hidden=None,
+    def __init__(self, object_attr=None, header=None, width=None, row_style=None, header_style=None, hidden=None,
                  data_validation=None, default_value=None, number_format=None, allow_blank=None):
         self.object_attr = object_attr or self.object_attr
         self.header = header or self.header
         self.width = width or self.width
-        self.style = CellStyle.merge(self.style, style)
-        self.header_style = CellStyle.merge(self.header_style, header_style)
+
+        self.styles = tuple(
+            style for style
+            in (row_style, header_style)
+            if type(style) in (NamedStyle, ExtendedStyle)
+        )
+
+        self.row_style = row_style or self.row_style
+        self.header_style = header_style or self.header_style
 
         if hidden is not None:
             self.hidden = hidden
@@ -68,18 +78,19 @@ class Column:
             )
         )
 
-    def style_cell(self, cell):
-        """Add styling, is separated from creation since data_validation must be applied after appending to worksheet"""
-        cell.number_format = self.number_format
-
-        if self.style:
-            self.style.style_cell(cell)
-
-        if self.data_validation:
-            self.data_validation.add(cell)
-
-    def get_styled_header_cell(self, worksheet):
-        return self.header_style.style_cell(WriteOnlyCell(worksheet, value=self.header))
+    # def style_cell(self, cell, style_set):
+    #     """Add styling, is separated from creation since data_validation must be applied after appending to worksheet"""
+    #
+    #     cell.number_format = self.number_format
+    #
+    #     if self.style:
+    #         self.style.style_cell(cell)
+    #
+    #     if self.data_validation:
+    #         self.data_validation.add(cell)
+    #
+    # def get_styled_header_cell(self, worksheet):
+    #     return self.header_style.style_cell(WriteOnlyCell(worksheet, value=self.header))
 
     def style_worksheet(self, worksheet, column_dimension):
         if self.width is not None:
@@ -93,7 +104,11 @@ class Column:
 
 class CharColumn(Column):
     max_length = None
-    number_format = "@"
+    row_style = ExtendedStyle(
+        base=StyleSet.DEFAULT_ROW_STYLE,
+        name="String",
+        number_format="@"
+    )
 
     def __init__(self, max_length=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -123,10 +138,15 @@ class CharColumn(Column):
 
 
 class TextColumn(CharColumn):
+    row_style = ExtendedStyle(
+        base=StyleSet.DEFAULT_ROW_STYLE,
+        name="Text",
+        number_format="@",
+        alignment={"wrap_text": True}
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.style.alignment = Alignment(wrap_text=True)
 
 
 class BooleanColumn(Column):
@@ -166,7 +186,11 @@ class BooleanColumn(Column):
 
 
 class FloatColumn(Column):
-    number_format = "0.00"
+    row_style = ExtendedStyle(
+        base=StyleSet.DEFAULT_ROW_STYLE,
+        name="Decimal",
+        number_format="0.00",
+    )
     default_value = 0.0
 
     def to_excel(self, value):
@@ -182,6 +206,11 @@ class FloatColumn(Column):
 
 
 class IntegerColumn(Column):
+    row_style = ExtendedStyle(
+        base=StyleSet.DEFAULT_ROW_STYLE,
+        name="Integer",
+        number_format="# ##0",
+    )
     number_format = "# ##0"
     default_value = 0
     round_value = True
@@ -230,9 +259,6 @@ class ChoiceColumn(Column):
 class DateTimeColumn(Column):
     SECONDS_PER_DAY = 24 * 60 * 60
 
-    style = CellStyle(alignment=Alignment(horizontal="center"))
-    header_style = CellStyle(alignment=Alignment(horizontal="center"))
-
     class formats:
         SHORT_DATE = "yyyy-mm-dd"
         LONG_DATE = "DDDD, MMMM DD, ÅÅÅÅ"
@@ -240,7 +266,18 @@ class DateTimeColumn(Column):
         TIME = "h:mm:ss"
         SHORT_TIME = "h:mm"
 
-    number_format = formats.SHORT_DATE
+    row_style = ExtendedStyle(
+        base=StyleSet.DEFAULT_ROW_STYLE,
+        name="Date",
+        alignment={"horizontal": "center"},
+        number_format=formats.SHORT_DATE
+    )
+
+    header_style = ExtendedStyle(
+        base=StyleSet.DEFAULT_HEADER_STYLE,
+        name="Header center",
+        alignment={"horizontal": "center"},
+    )
 
     def from_excel(self, cell):
         value = cell.value
@@ -272,8 +309,6 @@ class DateTimeColumn(Column):
 
 
 class DateColumn(DateTimeColumn):
-    number_format = DateTimeColumn.formats.SHORT_DATE
-
     def from_excel(self, cell):
         try:
             return super().from_excel(cell).date()
@@ -285,7 +320,12 @@ class DateColumn(DateTimeColumn):
 
 
 class TimeColumn(DateTimeColumn):
-    number_format = DateTimeColumn.formats.SHORT_TIME
+    row_style = ExtendedStyle(
+        base=StyleSet.DEFAULT_ROW_STYLE,
+        name="Time",
+        alignment={"horizontal": "center"},
+        number_format=DateTimeColumn.formats.TIME
+    )
 
     def from_excel(self, cell):
         if type(cell.value) == time:

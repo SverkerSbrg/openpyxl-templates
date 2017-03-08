@@ -11,36 +11,31 @@ class WorkbookTemplate:
 
     styles = None
 
-    style = None
-    header_style = None
-    title_style = None
-    description_style = None
+    # style = None
+    # header_style = None
+    # title_style = None
+    # description_style = None
 
-    def __init__(self, workbook, sheets=None, active_sheet=None, styles=None, style=None, header_style=None,
-                 title_style=None, description_style=None):
+    def __init__(self, workbook, sheets=None, active_sheet=None, styles=None):
         self.workbook = workbook
         self.sheets = sheets or self.sheets or []
         self.active_sheet = active_sheet or self.active_sheet
-        self.styles = styles or self.styles or StyleSet()
-
-        self.style = CellStyle.merge(self.style, style)
-        self.header_style = CellStyle.merge(self.style, self.header_style, header_style)
-        self.title_style = CellStyle.merge(self.style, self.title_style, title_style)
-        self.description_style = CellStyle.merge(self.style, self.description_style, description_style)
+        self.styles = styles or self.styles or []
 
         for sheet in self.sheets:
-            sheet.style = CellStyle.merge(self.style, sheet.style)
-            sheet.header_style = CellStyle.merge(self.header_style, sheet.header_style)
-            sheet.title_style = CellStyle.merge(self.header_style, sheet.header_style)
-            sheet.description_style = CellStyle.merge(self.description_style, sheet.description_style)
-            sheet.rebase_column_styles()
+            if sheet.styles:
+                for style in sheet.styles:
+                    if style:
+                        self.styles.append(style)
+
+        self._style_set = StyleSet(*self.styles)
 
         self._sheet_map = {sheet.name: sheet for sheet in self.sheets}
 
     def write_sheet(self, name, objects):
         excel_sheet = self._sheet_map[name]
         worksheet = self.get_or_create_sheet(excel_sheet)
-        excel_sheet.write(worksheet, objects)
+        excel_sheet.write(worksheet, self._style_set, objects)
 
         self.update_active_sheet()
 
@@ -78,7 +73,11 @@ class ExtendedStyle(dict):
 
 
 class StyleSet(dict):
-    DEFAULT_STYLES = "__default__", "__title__", "__header__", "__row__"
+    DEFAULT_STYLE = "__default__"
+    DEFAULT_TITLE_STYLE = "__title__"
+    DEFAULT_HEADER_STYLE = "__header__"
+    DEFAULT_ROW_STYLE = "__row__"
+    DEFAULT_STYLES = DEFAULT_STYLE, DEFAULT_TITLE_STYLE, DEFAULT_HEADER_STYLE, DEFAULT_ROW_STYLE
 
     def __init__(self, *styles, __default__=None):
         self.names = set()
