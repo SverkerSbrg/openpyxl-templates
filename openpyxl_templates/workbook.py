@@ -1,13 +1,14 @@
-from openpyxl.descriptors import Typed
-
-from openpyxl_templates.style import StyleSet, SheetStyleMixin
+from openpyxl_templates.style import StyleSet, SheetStyleMixin, StandardStyleSet
+from openpyxl_templates.utils import Typed
 
 
 class WorkbookTemplate(SheetStyleMixin):
     sheets = None
-    active_sheet = Typed(expected_class=str, allow_none=True)
+    active_sheet = Typed(expected_type=str, allow_none=True)
 
-    styles = Typed(expeced_class=StyleSet)
+    styles = Typed(expected_type=StyleSet)
+
+    header_style = "header"
 
     def __init__(self, workbook, sheets=None, active_sheet=None, styles=None, **style_keys):
         super().__init__(**style_keys)
@@ -16,7 +17,7 @@ class WorkbookTemplate(SheetStyleMixin):
         self.sheets = sheets or self.sheets or []
         self.active_sheet = active_sheet or self.active_sheet
 
-        self.styles = styles or self.styles or StyleSet()
+        self.styles = styles or self.styles or StandardStyleSet()
 
         self._sheet_map = {sheet.name: sheet for sheet in self.sheets}
 

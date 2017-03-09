@@ -7,8 +7,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from openpyxl_templates.exceptions import BlankNotAllowed, IllegalMaxLength, MaxLengthExceeded, UnableToParseBool, \
     UnableToParseFloat, UnableToParseInt, IllegalChoice, UnableToParseDatetime, UnableToParseDate, UnableToParseTime
-from openpyxl_templates.style import CellStyle, ColumnStyleMixin
-from openpyxl_templates.workbook import StyleSet, ExtendedStyle
+from openpyxl_templates.style import ColumnStyleMixin
 
 
 class Column(ColumnStyleMixin):
@@ -94,11 +93,7 @@ class Column(ColumnStyleMixin):
 
 class CharColumn(Column):
     max_length = None
-    row_style = ExtendedStyle(
-        base=StyleSet.DEFAULT_ROW_STYLE,
-        name="String",
-        number_format="@"
-    )
+    row_style = "row_text"
 
     def __init__(self, max_length=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -128,12 +123,7 @@ class CharColumn(Column):
 
 
 class TextColumn(CharColumn):
-    row_style = ExtendedStyle(
-        base=StyleSet.DEFAULT_ROW_STYLE,
-        name="Text",
-        number_format="@",
-        alignment={"wrap_text": True}
-    )
+    row_style = "row_text"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -176,11 +166,7 @@ class BooleanColumn(Column):
 
 
 class FloatColumn(Column):
-    row_style = ExtendedStyle(
-        base=StyleSet.DEFAULT_ROW_STYLE,
-        name="Decimal",
-        number_format="0.00",
-    )
+    row_style = "row_float"
     default_value = 0.0
 
     def to_excel(self, value):
@@ -196,12 +182,7 @@ class FloatColumn(Column):
 
 
 class IntegerColumn(Column):
-    row_style = ExtendedStyle(
-        base=StyleSet.DEFAULT_ROW_STYLE,
-        name="Integer",
-        number_format="# ##0",
-    )
-    number_format = "# ##0"
+    row_style = "row_integer"
     default_value = 0
     round_value = True
 
@@ -256,18 +237,8 @@ class DateTimeColumn(Column):
         TIME = "h:mm:ss"
         SHORT_TIME = "h:mm"
 
-    row_style = ExtendedStyle(
-        base=StyleSet.DEFAULT_ROW_STYLE,
-        name="Date",
-        alignment={"horizontal": "center"},
-        number_format=formats.SHORT_DATE
-    )
-
-    header_style = ExtendedStyle(
-        base=StyleSet.DEFAULT_HEADER_STYLE,
-        name="Header center",
-        alignment={"horizontal": "center"},
-    )
+    row_style = "row_date"
+    header_style = "header_center"
 
     def from_excel(self, cell):
         value = cell.value
@@ -310,12 +281,7 @@ class DateColumn(DateTimeColumn):
 
 
 class TimeColumn(DateTimeColumn):
-    row_style = ExtendedStyle(
-        base=StyleSet.DEFAULT_ROW_STYLE,
-        name="Time",
-        alignment={"horizontal": "center"},
-        number_format=DateTimeColumn.formats.TIME
-    )
+    row_style = "row_time"
 
     def from_excel(self, cell):
         if type(cell.value) == time:

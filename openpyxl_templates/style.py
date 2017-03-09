@@ -1,7 +1,29 @@
+from collections import OrderedDict
 from itertools import chain
 
-from openpyxl.descriptors import Typed
 from openpyxl.styles import NamedStyle
+
+from openpyxl_templates.utils import SolidFill, Typed
+
+
+class StylesMetaClass(type):
+    @classmethod
+    def __prepare__(mcs, name, bases):
+        return OrderedDict()
+
+    def __new__(mcs, name, bases, classdict):
+        result = type.__new__(mcs, name, bases, dict(classdict))
+
+        result._named_styles = OrderedDict(
+            [
+                (attr, column)
+                for attr, column
+                in classdict.items()
+                if column.__class__ in (NamedStyle, ExtendedStyle)
+            ]
+        )
+
+        return result
 
 
 class ExtendedStyle(dict):
@@ -19,12 +41,12 @@ class ExtendedStyle(dict):
         self.protection = protection
 
 
-class StyleSet(dict):
-    DEFAULT_STYLE = "__default__"
-    DEFAULT_TITLE_STYLE = "__title__"
-    DEFAULT_HEADER_STYLE = "__header__"
-    DEFAULT_ROW_STYLE = "__row__"
-    DEFAULT_STYLES = DEFAULT_STYLE, DEFAULT_TITLE_STYLE, DEFAULT_HEADER_STYLE, DEFAULT_ROW_STYLE
+class StyleSet(dict, metaclass=StylesMetaClass):
+    # DEFAULT_STYLE = "__default__"
+    # DEFAULT_TITLE_STYLE = "__title__"
+    # DEFAULT_HEADER_STYLE = "__header__"
+    # DEFAULT_ROW_STYLE = "__row__"
+    # DEFAULT_STYLES = DEFAULT_STYLE, DEFAULT_TITLE_STYLE, DEFAULT_HEADER_STYLE, DEFAULT_ROW_STYLE
 
     default = Typed(expected_type=NamedStyle, allow_none=True)
 
@@ -36,7 +58,7 @@ class StyleSet(dict):
         self._styles = {}
         # self._style_hash_map = {}
 
-        for key, style in styles.items():
+        for key, style in chain(self._named_styles.items(), styles.items()):
             self[key] = style
 
     def __setitem__(self, key, style):
@@ -80,7 +102,7 @@ class StyleSet(dict):
         elif key is None:
             return None
 
-        raise TypeError("A style key must be a string or None.")
+        raise TypeError("'%s' is an invalid style key. It must be either a string or None." % key)
 
         # if _type not in (ExtendedStyle, NamedStyle):
         #     raise TypeError("Style keys must be strings, ")
@@ -119,9 +141,49 @@ class StyleSet(dict):
         return object_class(**kwargs)
 
 
+class StandardStyleSet(StyleSet):
+    default = NamedStyle(name="Default")
+    header = ExtendedStyle(base="default", name="HeaderX", font={"bold": True, "color": "FFFFFFFF"}, fill=SolidFill("5d1738"))
+    header_center = ExtendedStyle(base="header", name="Header, center", alignment={"horizontal": "center"})
+    row = default
+    row_char = ExtendedStyle(
+        base="row",
+        name="Row, string",
+        number_format="@",
+    )
+    row_text = ExtendedStyle(
+        base="row",
+        name="Row, text",
+        number_format="@",
+        alignment={"wrap_text": True}
+    )
+    row_integer = ExtendedStyle(
+        base="row",
+        name="Row, integer",
+        number_format="# ##0",
+    )
+    row_float = ExtendedStyle(
+        base="row",
+        name="Row, decimal",
+        number_format="0.00",
+    )
+    row_date = ExtendedStyle(
+        base="row",
+        name="Row, date",
+        alignment={"horizontal": "center"},
+        number_format="yyyy-mm-dd"
+    )
+    row_time = ExtendedStyle(
+        base="row",
+        name="Row, time",
+        alignment={"horizontal": "center"},
+        number_format="h:mm"
+    )
+
+
 class ColumnStyleMixin():
-    header_style = Typed(expected_class=str, allow_none=True)
-    row_style = Typed(expected_class=str, allow_none=True)
+    header_style = Typed(expected_type=str, allow_none=True)
+    row_style = Typed(expected_type=str, allow_none=True)
 
     def __init__(self, header_style=None, row_style=None):
         self.header_style = header_style or self.header_style
@@ -133,9 +195,9 @@ class ColumnStyleMixin():
 
 
 class SheetStyleMixin(ColumnStyleMixin):
-    empty_style = Typed(expected_class=str, allow_none=True)
-    title_style = Typed(expected_class=str, allow_none=True)
-    description_style = Typed(expected_class=str, allow_none=True)
+    empty_style = Typed(expected_type=str, allow_none=True)
+    title_style = Typed(expected_type=str, allow_none=True)
+    description_style = Typed(expected_type=str, allow_none=True)
 
     def __init__(self, empty_style=None, title_style=None, description_style=None, **kwargs):
         self.empty_style = empty_style or self.empty_style

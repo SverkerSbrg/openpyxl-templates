@@ -24,9 +24,9 @@ choices = (
 class TestSheet(SheetTemplate):
     name = "TestSheet"
     title = "Test blad2"
-    styles = [
-        NamedStyle("__header__", font=Font(bold=True, color="FFFFFFFF"), fill=SolidFill("5d1738"))
-    ]
+    # styles = [
+    #     NamedStyle("__header__", font=Font(bold=True, color="FFFFFFFF"), fill=SolidFill("5d1738"))
+    # ]
     row_exception_policy = RowExceptionPolicy.RETURN_EXCEPTION
 
     columns = [
