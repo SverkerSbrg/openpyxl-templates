@@ -7,17 +7,14 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from openpyxl_templates.exceptions import BlankNotAllowed, IllegalMaxLength, MaxLengthExceeded, UnableToParseBool, \
     UnableToParseFloat, UnableToParseInt, IllegalChoice, UnableToParseDatetime, UnableToParseDate, UnableToParseTime
-from openpyxl_templates.style import CellStyle
+from openpyxl_templates.style import CellStyle, ColumnStyleMixin
 from openpyxl_templates.workbook import StyleSet, ExtendedStyle
 
 
-class Column:
+class Column(ColumnStyleMixin):
     object_attr = None
     header = None
     width = None
-
-    row_style = StyleSet.DEFAULT_ROW_STYLE
-    header_style = StyleSet.DEFAULT_HEADER_STYLE
 
     hidden = False
     data_validation = None
@@ -27,20 +24,13 @@ class Column:
 
     BLANK_VALUES = (None, "")
 
-    def __init__(self, object_attr=None, header=None, width=None, row_style=None, header_style=None, hidden=None,
-                 data_validation=None, default_value=None, number_format=None, allow_blank=None):
+    def __init__(self, object_attr=None, header=None, width=None, hidden=None,
+                 data_validation=None, default_value=None, number_format=None, allow_blank=None, **style_keys):
+        super().__init__(**style_keys)
+
         self.object_attr = object_attr or self.object_attr
         self.header = header or self.header
         self.width = width or self.width
-
-        self.styles = tuple(
-            style for style
-            in (row_style, header_style)
-            if type(style) in (NamedStyle, ExtendedStyle)
-        )
-
-        self.row_style = row_style or self.row_style
-        self.header_style = header_style or self.header_style
 
         if hidden is not None:
             self.hidden = hidden

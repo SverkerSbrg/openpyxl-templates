@@ -2,12 +2,13 @@ from collections import deque
 from itertools import chain
 
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.descriptors import Typed
 from openpyxl.utils import column_index_from_string
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions
-from openpyxl_templates.style import CellStyle
+from openpyxl_templates.style import CellStyle, SheetStyleMixin
 from openpyxl_templates.workbook import StyleSet
 
 MAX_COLUMN_INDEX = column_index_from_string("XFD")
@@ -37,22 +38,12 @@ class RowExceptionPolicy:
     RETURN_EXCEPTION = "RETURN_EXCEPTION"
 
 
-class SheetTemplate:
+class SheetTemplate(SheetStyleMixin):
     name = None
     title = None
     description = None
 
     columns = None
-    # style = None
-    # header_style = None
-    # title_style = None
-    # description_style = None
-
-    styles = None
-    title_style = StyleSet.DEFAULT_TITLE_STYLE
-    heading_style = StyleSet.DEFAULT_HEADER_STYLE
-
-
     freeze_header = True
     hide_excess_columns = True
     format_as_table = True
@@ -61,19 +52,16 @@ class SheetTemplate:
 
     row_exception_policy = RowExceptionPolicy.RAISE_EXCEPTION
 
-    def __init__(self, name=None, title=None, description=None, columns=None, styles=None, freeze_header=None,
+    def __init__(self, name=None, title=None, description=None, columns=None, freeze_header=None,
                  hide_excess_columns=None, format_as_table=None, table_style=None, empty_row_count=None,
-                 row_exception_policy=None):
+                 row_exception_policy=None, **style_keys):
+
+        super().__init__(**style_keys)
 
         self.name = name or self.name
         self.title = title or self.title
         self.description = description or self.description
         self.columns = columns or self.columns or []
-        self.styles = list(styles or self.styles or [])
-
-        for column in self.columns:
-            for style in column.styles:
-                self.styles.append(style)
 
         self.freeze_header = freeze_header if freeze_header is not None else self.freeze_header
         self.hide_excess_columns = hide_excess_columns if hide_excess_columns is not None else self.hide_excess_columns
