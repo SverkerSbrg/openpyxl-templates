@@ -42,13 +42,7 @@ class ExtendedStyle(dict):
 
 
 class StyleSet(dict, metaclass=StylesMetaClass):
-    # DEFAULT_STYLE = "__default__"
-    # DEFAULT_TITLE_STYLE = "__title__"
-    # DEFAULT_HEADER_STYLE = "__header__"
-    # DEFAULT_ROW_STYLE = "__row__"
-    # DEFAULT_STYLES = DEFAULT_STYLE, DEFAULT_TITLE_STYLE, DEFAULT_HEADER_STYLE, DEFAULT_ROW_STYLE
-
-    default = Typed(expected_type=NamedStyle, allow_none=True)
+    default = Typed("default", expected_type=NamedStyle, allow_none=True)
 
     def __init__(self, default=None, **styles):
         super().__init__()
@@ -103,14 +97,6 @@ class StyleSet(dict, metaclass=StylesMetaClass):
             return None
 
         raise TypeError("'%s' is an invalid style key. It must be either a string or None." % key)
-
-        # if _type not in (ExtendedStyle, NamedStyle):
-        #     raise TypeError("Style keys must be strings, ")
-        #
-        # if item.name not in self:
-        #     self[item.name] = item
-        #
-        # return super().__getitem__(item.name)
 
     def _extend_style(self, extended_style):
         base_style = self[extended_style.base]
@@ -182,8 +168,8 @@ class StandardStyleSet(StyleSet):
 
 
 class ColumnStyleMixin():
-    header_style = Typed(expected_type=str, allow_none=True)
-    row_style = Typed(expected_type=str, allow_none=True)
+    header_style = Typed("header_style", expected_type=str, allow_none=True)
+    row_style = Typed("row_style", expected_type=str, allow_none=True)
 
     def __init__(self, header_style=None, row_style=None):
         self.header_style = header_style or self.header_style
@@ -195,9 +181,9 @@ class ColumnStyleMixin():
 
 
 class SheetStyleMixin(ColumnStyleMixin):
-    empty_style = Typed(expected_type=str, allow_none=True)
-    title_style = Typed(expected_type=str, allow_none=True)
-    description_style = Typed(expected_type=str, allow_none=True)
+    empty_style = Typed("empty_style", expected_type=str, allow_none=True)
+    title_style = Typed("title_style", expected_type=str, allow_none=True)
+    description_style = Typed("descriptor_style", expected_type=str, allow_none=True)
 
     def __init__(self, empty_style=None, title_style=None, description_style=None, **kwargs):
         self.empty_style = empty_style or self.empty_style

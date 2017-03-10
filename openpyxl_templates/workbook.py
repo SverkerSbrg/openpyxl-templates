@@ -4,9 +4,9 @@ from openpyxl_templates.utils import Typed
 
 class WorkbookTemplate(SheetStyleMixin):
     sheets = None
-    active_sheet = Typed(expected_type=str, allow_none=True)
+    active_sheet = Typed("active_sheet", expected_type=str, allow_none=True)
 
-    styles = Typed(expected_type=StyleSet)
+    styles = Typed("styles", expected_type=StyleSet)
 
     header_style = "header"
 
@@ -19,7 +19,7 @@ class WorkbookTemplate(SheetStyleMixin):
 
         self.styles = styles or self.styles or StandardStyleSet()
 
-        self._sheet_map = {sheet.name: sheet for sheet in self.sheets}
+        self._sheet_map = {sheet.sheetname: sheet for sheet in self.sheets}
 
         for sheet in self.sheets:
             sheet.inherit_styles(self)
@@ -37,26 +37,13 @@ class WorkbookTemplate(SheetStyleMixin):
         return excel_sheet.read_rows(worksheet)
 
     def get_or_create_sheet(self, excel_sheet):
-        name = excel_sheet.name
+        name = excel_sheet.sheetname
         if name in self.workbook.sheetnames:
             return self.workbook[name]
-        return self.workbook.create_sheet(excel_sheet.name)
+        return self.workbook.create_sheet(excel_sheet.sheetname)
 
     def update_active_sheet(self):
         for index, sheetname in enumerate(self.workbook.sheetnames):
             if sheetname == self.active_sheet:
                 self.workbook.active = index
                 return
-
-
-
-
-    # def _hash_style_without_name(self, style):
-    #     fields = []
-    #     for attr in NamedStyle.__elements__ + ("number_format",):
-    #         val = getattr(style, attr)
-    #         if isinstance(val, list):
-    #             val = tuple(val)
-    #         fields.append(val)
-    #
-    #     return hash(tuple(fields))

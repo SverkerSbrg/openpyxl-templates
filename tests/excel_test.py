@@ -22,7 +22,7 @@ choices = (
 
 
 class TestSheet(SheetTemplate):
-    name = "TestSheet"
+    sheetname = "TestSheet"
     title = "Test blad2"
     # styles = [
     #     NamedStyle("__header__", font=Font(bold=True, color="FFFFFFFF"), fill=SolidFill("5d1738"))
@@ -60,7 +60,6 @@ class TestSheet(SheetTemplate):
             choices=choices,
             width=30,
             default_value=""
-            # default_value="ADD"
         ),
         DateTimeColumn(
             object_attr="date",
@@ -98,6 +97,16 @@ class TestObject:
         self.date = date
 
         self.time = date.time()
+
+    def __str__(self):
+        return str({
+            "one": self.one,
+            "three": self.three,
+            "six": self.six,
+            "action": self.action,
+            "date": self.date,
+            "time": self.time
+        })
 
 
 output_workbook = Workbook()

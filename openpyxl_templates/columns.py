@@ -2,29 +2,28 @@ from datetime import date, timedelta, time
 from datetime import datetime
 
 from openpyxl.cell import WriteOnlyCell
-from openpyxl.styles import Alignment, NamedStyle
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from openpyxl_templates.exceptions import BlankNotAllowed, IllegalMaxLength, MaxLengthExceeded, UnableToParseBool, \
     UnableToParseFloat, UnableToParseInt, IllegalChoice, UnableToParseDatetime, UnableToParseDate, UnableToParseTime
 from openpyxl_templates.style import ColumnStyleMixin
+from openpyxl_templates.utils import Typed
 
 
 class Column(ColumnStyleMixin):
-    object_attr = None
-    header = None
-    width = None
+    object_attr = Typed("object_attr", expected_type=str, allow_none=False)
+    header = Typed("header", expected_type=str, allow_none=True)
+    width = Typed("width", expected_type=int, allow_none=True)
 
-    hidden = False
-    data_validation = None
+    hidden = Typed("hidden", expected_type=bool, value=False)
+    data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
     default_value = None
-    number_format = "General"
-    allow_blank = True
+    allow_blank = Typed("allow_blank", expected_type=bool, value=True)
 
     BLANK_VALUES = (None, "")
 
     def __init__(self, object_attr=None, header=None, width=None, hidden=None,
-                 data_validation=None, default_value=None, number_format=None, allow_blank=None, **style_keys):
+                 data_validation=None, default_value=None, allow_blank=None, **style_keys):
         super().__init__(**style_keys)
 
         self.object_attr = object_attr or self.object_attr
@@ -36,7 +35,6 @@ class Column(ColumnStyleMixin):
 
         self.data_validation = data_validation or self.data_validation
         self.default_value = default_value or self.default_value
-        self.number_format = number_format or self.number_format
         self.allow_blank = allow_blank or self.allow_blank
 
     def get_value_from_object(self, obj):
@@ -63,23 +61,9 @@ class Column(ColumnStyleMixin):
         return WriteOnlyCell(
             worksheet,
             value=self.to_excel(
-                self.get_value_from_object(obj) if obj else self.default_value
+                self.get_value_from_object(obj) if obj else None
             )
         )
-
-    # def style_cell(self, cell, style_set):
-    #     """Add styling, is separated from creation since data_validation must be applied after appending to worksheet"""
-    #
-    #     cell.number_format = self.number_format
-    #
-    #     if self.style:
-    #         self.style.style_cell(cell)
-    #
-    #     if self.data_validation:
-    #         self.data_validation.add(cell)
-    #
-    # def get_styled_header_cell(self, worksheet):
-    #     return self.header_style.style_cell(WriteOnlyCell(worksheet, value=self.header))
 
     def style_worksheet(self, worksheet, column_dimension):
         if self.width is not None:
@@ -89,6 +73,21 @@ class Column(ColumnStyleMixin):
 
         if self.data_validation:
             worksheet.add_data_validation(self.data_validation)
+
+    def __str__(self):
+
+        return "%s: %s" % (
+            self.__class__.__name__,
+            "{%s}" % ", ".join(
+                ": ".join(item) for item in (
+                    ("object_attr", str(self.object_attr)),
+                    ("header", str(self.header)),
+                    ("header_style", str(self.header_style)),
+                    ("row_style", str(self.row_style)),
+                    ("allow_blank", str(self.allow_blank))
+                )
+            )
+        )
 
 
 class CharColumn(Column):
@@ -115,9 +114,6 @@ class CharColumn(Column):
             return ""
 
         value = str(value)
-
-        # if self.max_length is not None and len(value) > self.max_length:
-        #     raise OpenpyxlTemplateCellException("String to long", None)
 
         return value
 
@@ -230,13 +226,6 @@ class ChoiceColumn(Column):
 class DateTimeColumn(Column):
     SECONDS_PER_DAY = 24 * 60 * 60
 
-    class formats:
-        SHORT_DATE = "yyyy-mm-dd"
-        LONG_DATE = "DDDD, MMMM DD, ÅÅÅÅ"
-        DATETIME = "yyyy-mm-dd h:mm:ss"
-        TIME = "h:mm:ss"
-        SHORT_TIME = "h:mm"
-
     row_style = "row_date"
     header_style = "header_center"
 
@@ -264,9 +253,6 @@ class DateTimeColumn(Column):
             return delta.days + delta.seconds / self.SECONDS_PER_DAY + 2
         except:
             pass
-            # if type(value) not in (datetime, date):
-            #     raise OpenpyxlTemplateCellException("Not datetime")
-            # return value
 
 
 class DateColumn(DateTimeColumn):

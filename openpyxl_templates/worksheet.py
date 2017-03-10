@@ -1,13 +1,14 @@
 from collections import deque
-from itertools import chain
 
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.styles.table import TableStyle
 from openpyxl.utils import column_index_from_string
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions
 from openpyxl_templates.style import SheetStyleMixin
+from openpyxl_templates.utils import Typed
 
 MAX_COLUMN_INDEX = column_index_from_string("XFD")
 
@@ -37,26 +38,25 @@ class RowExceptionPolicy:
 
 
 class SheetTemplate(SheetStyleMixin):
-    name = None
-    title = None
-    description = None
+    sheetname = Typed("sheetname", expected_type=str)
+    title = Typed("title", expected_type=str, allow_none=True)
+    description = Typed("description", expected_type=str, allow_none=True)
 
     columns = None
-    freeze_header = True
-    hide_excess_columns = True
-    format_as_table = True
-    table_style = None
-    empty_row_count = 1
+    freeze_header = Typed("freeze_header", expected_type=bool, value=True)
+    hide_excess_columns = Typed("hide_excess_columns", expected_type=bool, value=True)
+    format_as_table = Typed("format_as_table", expected_type=bool, value=True)
+    table_style = Typed("table_style", expected_type=TableStyle, allow_none=True)
 
     row_exception_policy = RowExceptionPolicy.RAISE_EXCEPTION
 
-    def __init__(self, name=None, title=None, description=None, columns=None, freeze_header=None,
-                 hide_excess_columns=None, format_as_table=None, table_style=None, empty_row_count=None,
+    def __init__(self, sheetname=None, title=None, description=None, columns=None, freeze_header=None,
+                 hide_excess_columns=None, format_as_table=None, table_style=None,
                  row_exception_policy=None, **style_keys):
 
         super().__init__(**style_keys)
 
-        self.name = name or self.name
+        self.sheetname = sheetname or self.sheetname
         self.title = title or self.title
         self.description = description or self.description
         self.columns = columns or self.columns or []
@@ -65,7 +65,6 @@ class SheetTemplate(SheetStyleMixin):
         self.hide_excess_columns = hide_excess_columns if hide_excess_columns is not None else self.hide_excess_columns
         self.format_as_table = format_as_table if format_as_table is not None else self.format_as_table
         self.table_style = table_style or table_style
-        self.empty_row_count = empty_row_count if empty_row_count is not None else self.empty_row_count
 
         self.row_exception_policy = row_exception_policy or self.row_exception_policy
 
@@ -118,23 +117,18 @@ class SheetTemplate(SheetStyleMixin):
     def write_rows(self, worksheet, style_set, objects):
         styles = tuple(style_set[column.row_style] for column in self.columns)
         data_validations = tuple(column.data_validation for column in self.columns)
+
         rows = (
             (
                 column.create_cell(worksheet, obj=obj)
                 for column in self.columns
             ) for obj in objects
         )
-        empty_rows = (
-            (
-                column.create_cell(worksheet, obj=None)
-                for column in self.columns
-            ) for i in range(0, self.empty_row_count)
-        )
 
         row_count = 0
         first_cell = None
         cells = tuple()
-        for row in chain(rows, empty_rows):
+        for row in rows:
             row_count += 1
 
             cells = tuple(row)
@@ -178,23 +172,32 @@ class SheetTemplate(SheetStyleMixin):
     def create_empty_row(self, row_number):
         return ExcelRow(self._column_attrs, row_number=row_number)
 
-    def write_title(self, worksheet):
-        # if self.title:
-        #     worksheet.append((self.title_style.style_cell(WriteOnlyCell(worksheet, value=self.title)),))
-        #     if not self.description:
-        #         worksheet.append((None,))
-        pass
+    def write_title(self, worksheet, styles):
+        if not self.title:
+            return
 
-    def write_description(self, worksheet):
-        # if self.description:
-        #     worksheet.append((self.description_style.style_cell(WriteOnlyCell(worksheet, value=self.description)),))
-        #     worksheet.append((None,))
-        pass
+        title = WriteOnlyCell(worksheet, value=self.title)
+        title_style = styles[self.title_style]
+        if title_style:
+            title.style = title_style
+        worksheet.append((title,))
+        if not self.description:
+            worksheet.append((None,))
+
+    def write_description(self, worksheet, styles):
+        if not self.description:
+            return
+
+        description = WriteOnlyCell(worksheet, value=self.description)
+        description_style = styles[self.description_style]
+        if description_style:
+            description.style = description_style
+        worksheet.append((description, ))
+        worksheet.append((None,))
 
     def write(self, worksheet, style_set, objects):
-        # worksheet = self.workbook.create_sheet(self.name)
-        self.write_title(worksheet)
-        self.write_description(worksheet)
+        self.write_title(worksheet, style_set)
+        self.write_description(worksheet, style_set)
         first_header = self.write_headers(worksheet, style_set)
         first_row_cell, last_row_cell = self.write_rows(worksheet, style_set, objects)
         self.style_columns(worksheet, style_set)
@@ -202,12 +205,7 @@ class SheetTemplate(SheetStyleMixin):
         if self.format_as_table:
             table = Table(
                 ref="%s:%s" % (first_header.coordinate, last_row_cell.coordinate),
-                displayName=self.name,
+                displayName=self.sheetname,
                 tableStyleInfo=self.table_style
             )
             worksheet.add_table(table)
-
-            # def rebase_column_styles(self):
-            #     for column in self.columns:
-            #         column.style = CellStyle.merge(self.style, column.style)
-            #         column.header_style = CellStyle.merge(self.header_style, column.header_style)
