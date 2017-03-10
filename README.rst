@@ -11,9 +11,10 @@ Fileformat
 ----------
 
 Openpyxl-templates recognises the following elements in a excel sheet:
- * Sheets - Individual sheets identified by the sheetname
- * Tile - An optional titel found  in cell A1
- * Description - An optional description found directly below the title
- * Headers - The headers of the data table
- * Rows - Everything below the headers, when reading openpyxl-templates will read until the last populated row.
+
+* Sheets - Individual sheets identified by the sheetname
+* Title - An optional title found  in cell A1
+* Description - An optional description found directly below the title
+* Headers - The headers of the data table
+* Rows - The actual data, everything below the headers
 
