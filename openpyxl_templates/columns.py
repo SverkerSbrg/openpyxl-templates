@@ -210,8 +210,8 @@ class ChoiceColumn(Column):
 
         super().__init__(*args, **kwargs)
 
-        self._to_excel_map = {internal: excel for excel, internal in choices}
-        self._from_excel_map = {excel: internal for excel, internal in choices}
+        self._to_excel_map = {internal: excel for excel, internal in self.choices}
+        self._from_excel_map = {excel: internal for excel, internal in self.choices}
 
     def to_excel(self, value):
         return self._to_excel_map[value]
