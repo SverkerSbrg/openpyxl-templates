@@ -6,7 +6,7 @@ from openpyxl.utils import column_index_from_string
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 
-from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions
+from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions, HeaderNotFound
 from openpyxl_templates.style import SheetStyleMixin
 from openpyxl_templates.utils import Typed
 
@@ -49,10 +49,12 @@ class SheetTemplate(SheetStyleMixin):
     table_style = Typed("table_style", expected_type=TableStyle, allow_none=True)
 
     row_exception_policy = RowExceptionPolicy.RAISE_EXCEPTION
+    require_headers = True
+    skip_rows = 0
 
     def __init__(self, sheetname=None, title=None, description=None, columns=None, freeze_header=None,
                  hide_excess_columns=None, format_as_table=None, table_style=None,
-                 row_exception_policy=None, **style_keys):
+                 row_exception_policy=None, require_headers=None, skip_rows=None, **style_keys):
 
         super().__init__(**style_keys)
 
@@ -67,13 +69,28 @@ class SheetTemplate(SheetStyleMixin):
         self.table_style = table_style or table_style
 
         self.row_exception_policy = row_exception_policy or self.row_exception_policy
+        self.require_headers = require_headers if require_headers is not None else self.require_headers
+        self.skip_rows = skip_rows if skip_rows is not None else self.skip_rows
 
         self._column_attrs = list((column.object_attr for column in self.columns))
 
     def read_rows(self, worksheet):
         row_number = 0
+
+        skip_rows = self.skip_rows
+        header = not self.require_headers
+
         for raw_row in worksheet:
             row_number += 1
+
+            if skip_rows:
+                skip_rows -= 1
+                continue
+
+            if not header:
+                header = self._is_row_header(raw_row)
+                continue
+
             row = self.create_empty_row(row_number=row_number)
 
             que = deque(raw_row)
@@ -100,6 +117,9 @@ class SheetTemplate(SheetStyleMixin):
                     raise row_exception
 
             yield row
+
+        if not header:
+            raise HeaderNotFound(self.sheetname, [column.header for column in self.columns])
 
     def write_headers(self, worksheet, style_set):
         headers = []
@@ -209,3 +229,11 @@ class SheetTemplate(SheetStyleMixin):
                 tableStyleInfo=self.table_style
             )
             worksheet.add_table(table)
+
+    def _is_row_header(self, row):
+        row = deque(row)
+        for column in self.columns:
+            value = row.popleft().value if row else None
+            if value != column.header:
+                return False
+        return True

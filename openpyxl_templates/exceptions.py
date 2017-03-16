@@ -74,6 +74,17 @@ class OpenpyxlTemplateRowException(OpenpyxlTemplateException):
         super().__init__(message)
 
 
+class HeaderNotFound(OpenpyxlTemplateException):
+    def __init__(self, sheetname, headers):
+        super().__init__(
+            "Header column not found on sheet '%s' either make sure that the following headers are "
+            "present '%s' or set read_only_after_header to false." % (
+                sheetname,
+                ", ".join(headers)
+            )
+         )
+
+
 class CellExceptions(OpenpyxlTemplateRowException):
     def __init__(self, cell_exceptions):
         self.cell_exceptions = cell_exceptions
