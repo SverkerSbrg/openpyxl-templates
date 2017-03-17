@@ -37,7 +37,7 @@ class Typed(object):
         is_subclass = bool([True for t in self.expected_types if issubclass(type(value), t)])
         if not type(value) in self.expected_types and not is_subclass:
             if not self.allow_none or (self.allow_none and value is not None):
-                raise TypeError("Got type '%s' expected one of '%s'" % (type(value), str(self.expected_types)))
+                raise TypeError("Attribute '%s' got type '%s' expected one of '%s'" % (self.name, type(value), str(self.expected_types)))
 
         if instance is not None:
             instance.__dict__[self.name] = value

@@ -2,11 +2,21 @@
 Welcome to openpyxl-templates!
 ==============================
 
-Openpyxl-templates is an extension to `openpyxl <http://openpyxl.readthedocs.io/>`_ which is intended to simplify reading and writing of excel tables by limiting file layout. Openpyxl-templates templates does this by allowing users to specify which sheets to look for and which columns the tables on these sheets contains. This allows the user to provide data types and styling for each column which enables openpyxl-templates to validate when reading and formatting when writing data. The package also provides useful formatting shortcuts for freeze panes, hiding excess columns and formatting written data as a sortable table. 
+Openpyxl-templates is an extension to `openpyxl <http://openpyxl.readthedocs.io/>`_ which is intended to simplify reading and writing of excel tables by limiting restricting the layout of the excel to a standardized table. Openpyxl-templates works based on a template for the file which specifying its strucutre and content. This template has tree levels the workbook, the worksheet and the data columns on each individual sheet. The columns allows for data validation and can ensure that the correct number format is used.
 
-The styling functionality is based on `Named Styles <http://openpyxl.readthedocs.io/en/default/styles.html#creating-a-named-style>`_ which provides a significant performance boost compared with cell styles as well as making them available for reuse in excel once exported.
+Openpyxl-templates also provides shortcuts to features common when working with these kind of files such as "format as table" and the ability to hide all columns right of the last column in a sheet.
 
-----------
+Features
+--------
+* **Type support** provided by the column definitions enables more robust conversion to python when reading and removes the hassle of setting the number format yourself. For example openpyxl-templates can correctly read a date even when the number format is set to number rather then a date
+* **Data validation**
+* **Uniform styling** the workbook template allows you to set a style for the entire workbook, which reduces boiler plate.
+   * Override styles for entire worksheets or single columns
+   * Based on `Named Styles <http://openpyxl.readthedocs.io/en/default/styles.html#creating-a-named-style>`_ making them avaliable in the resulting excel as well as providing a performance boost compared with using cell styles
+   * **Format-as-table** automatically
+   * **Hide excess columns**
+
+
 Fileformat
 ----------
 

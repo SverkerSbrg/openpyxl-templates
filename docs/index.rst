@@ -9,14 +9,14 @@
    :maxdepth: 2
    :caption: Contents:
 
-   overview
+   index
    workbook_template
    worksheet_template
    style_set
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
