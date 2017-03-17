@@ -9,11 +9,13 @@ from openpyxl_templates.exceptions import BlankNotAllowed, IllegalMaxLength, Max
 from openpyxl_templates.style import ColumnStyleMixin
 from openpyxl_templates.utils import Typed
 
+DEFAULT_WIDTH = 8.43
+
 
 class Column(ColumnStyleMixin):
     object_attr = Typed("object_attr", expected_type=str, allow_none=False)
     header = Typed("header", expected_type=str, allow_none=True)
-    width = Typed("width", expected_type=int, allow_none=True)
+    width = Typed("width", expected_types=(int, float), allow_none=True, value=DEFAULT_WIDTH)
 
     hidden = Typed("hidden", expected_type=bool, value=False)
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
@@ -28,7 +30,7 @@ class Column(ColumnStyleMixin):
 
         self.object_attr = object_attr or self.object_attr
         self.header = header or self.header
-        self.width = width or self.width
+        self.width = width if width is not None else self.width
 
         if hidden is not None:
             self.hidden = hidden
@@ -183,7 +185,7 @@ class IntegerColumn(Column):
     round_value = True
 
     def to_excel(self, value):
-        return value
+        return int(value)
 
     def from_excel(self, cell):
         value = cell.value
@@ -199,14 +201,17 @@ class IntegerColumn(Column):
 
 class ChoiceColumn(Column):
     choices = None
+    add_list_validation = True
 
-    def __init__(self, *args, choices=None, **kwargs):
+    def __init__(self, *args, choices=None, add_list_validation=None, **kwargs):
         self.choices = choices or self.choices
+        self.add_list_validation = add_list_validation if add_list_validation is not None else self.add_list_validation
 
-        self.data_validation = DataValidation(
-            type="list",
-            formula1="\"%s\"" % ",".join('%s' % str(excel) for excel, internal in self.choices)
-        )
+        if self.add_list_validation and not self.data_validation:
+            self.data_validation = DataValidation(
+                type="list",
+                formula1="\"%s\"" % ",".join('%s' % str(excel) for excel, internal in self.choices)
+            )
 
         super().__init__(*args, **kwargs)
 

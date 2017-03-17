@@ -3,7 +3,12 @@ from itertools import chain
 
 from openpyxl.styles import NamedStyle
 
-from openpyxl_templates.utils import SolidFill, Typed
+from openpyxl_templates.utils import SolidFill, Typed, ColoredBorders
+
+
+class _Colors:
+    DARK_RED = "5d1738"
+    DARK_BLUE = "1a1f43"
 
 
 class StylesMetaClass(type):
@@ -20,7 +25,7 @@ class StylesMetaClass(type):
                 for attr, column
                 in classdict.items()
                 if column.__class__ in (NamedStyle, ExtendedStyle)
-            ]
+                ]
         )
 
         return result
@@ -129,9 +134,36 @@ class StyleSet(dict, metaclass=StylesMetaClass):
 
 class StandardStyleSet(StyleSet):
     default = NamedStyle(name="Default")
-    header = ExtendedStyle(base="default", name="HeaderX", font={"bold": True, "color": "FFFFFFFF"}, fill=SolidFill("5d1738"))
-    header_center = ExtendedStyle(base="header", name="Header, center", alignment={"horizontal": "center"})
-    row = default
+    empty = ExtendedStyle(
+        base="default",
+        name="Empty",
+        border=ColoredBorders("FFFFFFFF")
+    )
+    title = ExtendedStyle(
+        base="empty",
+        name="Title",
+        font={"size": 20},
+    )
+    description = ExtendedStyle(
+        base="empty",
+        name="Description",
+        font={"color": "FF777777"}
+    )
+    header = ExtendedStyle(
+        base="default",
+        name="Header",
+        font={"bold": True, "color": "FFFFFFFF"}, fill=SolidFill(_Colors.DARK_BLUE)
+    )
+    header_center = ExtendedStyle(
+        base="header",
+        name="Header, center",
+        alignment={"horizontal": "center"}
+    )
+    row = ExtendedStyle(
+        base="default",
+        name="Row",
+        protection={"locked": False}
+    )
     row_char = ExtendedStyle(
         base="row",
         name="Row, string",
@@ -201,153 +233,3 @@ class SheetStyleMixin(ColumnStyleMixin):
         if hasattr(self, "columns"):
             for column in self.columns:
                 column.inherit_styles(self)
-
-#
-# def iter_font(font):
-#     for attr in Font.__elements__:
-#         value = getattr(font, attr)
-#         if value:
-#             yield attr, value
-#
-#
-# def iter_alignment(alignment):
-#     for attr in Alignment.__fields__:
-#         value = getattr(alignment, attr)
-#         if value not in (None, 0):
-#             yield attr, value
-#
-#
-# def iter_border(border):
-#     for attr in border.__attrs__:
-#         value = getattr(border, attr)
-#         if value and attr != "outline":
-#             yield attr, value
-#         elif attr == "outline" and not value:
-#             yield attr, value
-#
-#
-# class CellStyle:
-#     font = None
-#     fill = None
-#     alignment = None
-#     border = None
-#
-#     def __init__(self, font=None, fill=None, alignment=None, border=None):
-#         self.font = self._merge_fonts(self.font, font)
-#         self.fill = self._merge_fills(self.fill, fill)
-#         self.alignment = self._merge_alignments(self.alignment, alignment)
-#         self.border = self._merge_borders(self.border, border)
-#
-#     def style_cell(self, cell):
-#         cell.font = self.font
-#         if self.fill is not None:
-#             cell.fill = self.fill
-#         cell.alignment = self.alignment
-#         cell.border = self.border
-#         return cell
-#
-#     @classmethod
-#     def merge(cls, *styles):
-#         return cls(
-#             font=cls._merge_fonts(*(style.font for style in styles if style)),
-#             fill=cls._merge_fills(*(style.fill for style in styles if style)),
-#             alignment=cls._merge_alignments(*(style.alignment for style in styles if style)),
-#             border=cls._merge_borders(*(style.border for style in styles if style))
-#         )
-#
-#     @classmethod
-#     def _merge_fonts(cls, *fonts):
-#         result = Font()
-#         for font in fonts:
-#             if font is not None:
-#                 for attr, value in iter_font(font):
-#                     setattr(result, attr, value)
-#         return result
-#
-#     @classmethod
-#     def _merge_fills(cls, *fills):
-#         for fill in fills[::-1]:
-#             if fill is not None:
-#                 return fill
-#         return None
-#
-#     @classmethod
-#     def _merge_alignments(cls, *alignments):
-#         result = Alignment()
-#         for aligment in alignments:
-#             if aligment is not None:
-#                 for attr, value in iter_alignment(aligment):
-#                     setattr(result, attr, value)
-#         return result
-#
-#     @classmethod
-#     def _merge_borders(cls, *borders):
-#         result = Border()
-#         for border in borders:
-#             if border is not None:
-#                 for attr, value in iter_border(border):
-#                     setattr(result, attr, value)
-#         return result
-#
-#     def __str__(self):
-#         return "Style: %s" % {
-#             "font": {attr: value for attr, value in iter_font(self.font)},
-#             "fill": str(self.fill),
-#             "alignment": {attr: value for attr, value in iter_alignment(self.alignment)},
-#             "border": {attr: value for attr, value in iter_border(self.border)}
-#         }
-#
-#
-# class ColumnStyle:
-#     base = None
-#     header = None
-#     cell = None
-#
-#     _style_attrs = ("base", "cell", "header")
-#
-#     def __init__(self, base=None, header=None, cell=None):
-#         self.base = CellStyle.merge(self.base, base)
-#         self.cell = CellStyle.merge(self.base, self.cell, cell)
-#         self.header = CellStyle.merge(self.base, self.header, header)
-#
-#     @classmethod
-#     def merge(cls, *sheet_styles):
-#         result = SheetStyle()
-#         for attr in cls._style_attrs:
-#             setattr(result, attr, CellStyle.merge(
-#                 *[getattr(style, attr, None) for style in sheet_styles if style]
-#             ))
-#         return result
-#
-#     def style_cell(self, cell):
-#         self.cell.style_cell(cell)
-#
-#     def style_header(self, cell):
-#         self.header.style_cell(cell)
-#
-#
-# class SheetStyle(ColumnStyle):
-#     empty = None
-#     title = None
-#
-#     _style_attrs = ColumnStyle._style_attrs + ("empty", "title")
-#
-#     def __init__(self, empty=None, title=None, **kwargs):
-#         super().__init__(**kwargs)
-#
-#         self.empty = CellStyle.merge(self.base, self.empty, empty)
-#         self.title = CellStyle.merge(self.base, self.title, title)
-#
-#     @property
-#     def column_style(self):
-#         return ColumnStyle(
-#             base=self.base,
-#             header=self.header,
-#             cell=self.header
-#         )
-#
-#     def style_empty(self, cell):
-#         self.empty.style_cell(cell)
-#
-#     def style_title(self, cell):
-#         self.title.style_cell(cell)

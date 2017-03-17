@@ -1,9 +1,11 @@
 from collections import deque
 
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.styles import Protection
 from openpyxl.styles.table import TableStyle
 from openpyxl.utils import column_index_from_string
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.protection import SheetProtection
 from openpyxl.worksheet.table import Table
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions, HeaderNotFound
@@ -49,12 +51,14 @@ class SheetTemplate(SheetStyleMixin):
     table_style = Typed("table_style", expected_type=TableStyle, allow_none=True)
 
     row_exception_policy = RowExceptionPolicy.RAISE_EXCEPTION
-    require_headers = True
-    skip_rows = 0
+    require_headers = Typed("require_headers", expected_type=bool, value=True)
+    skip_rows = Typed("skip_rows", expected_type=int, value=0)
+
+    sheet_protection = Typed("sheet_protection", expected_type=(bool, SheetProtection), value=False)
 
     def __init__(self, sheetname=None, title=None, description=None, columns=None, freeze_header=None,
                  hide_excess_columns=None, format_as_table=None, table_style=None,
-                 row_exception_policy=None, require_headers=None, skip_rows=None, **style_keys):
+                 row_exception_policy=None, require_headers=None, skip_rows=None, sheet_protection=None, **style_keys):
 
         super().__init__(**style_keys)
 
@@ -71,6 +75,8 @@ class SheetTemplate(SheetStyleMixin):
         self.row_exception_policy = row_exception_policy or self.row_exception_policy
         self.require_headers = require_headers if require_headers is not None else self.require_headers
         self.skip_rows = skip_rows if skip_rows is not None else self.skip_rows
+
+        self.sheet_protection = sheet_protection if sheet_protection is not None else self.sheet_protection
 
         self._column_attrs = list((column.object_attr for column in self.columns))
 
@@ -138,6 +144,10 @@ class SheetTemplate(SheetStyleMixin):
         styles = tuple(style_set[column.row_style] for column in self.columns)
         data_validations = tuple(column.data_validation for column in self.columns)
 
+        for data_validation in data_validations:
+            if data_validation:
+                worksheet.add_data_validation(data_validation)
+
         rows = (
             (
                 column.create_cell(worksheet, obj=obj)
@@ -167,6 +177,7 @@ class SheetTemplate(SheetStyleMixin):
                 if style:
                     cell.style = style
                 if data_validation:
+                    # print("ADDING DATA VALIDATIONS")
                     data_validation.add(cell)
 
         last_cell = cells[-1]
@@ -200,20 +211,20 @@ class SheetTemplate(SheetStyleMixin):
         title_style = styles[self.title_style]
         if title_style:
             title.style = title_style
-        worksheet.append((title,))
-        if not self.description:
-            worksheet.append((None,))
+        worksheet.append(self._pad_with_empty_cells(worksheet, styles, (title,)))
+        # if not self.description:
+        #     worksheet.append(self._pad_with_empty_cells((None,)))
 
     def write_description(self, worksheet, styles):
-        if not self.description:
-            return
+        if self.description:
+            description = WriteOnlyCell(worksheet, value=self.description)
+            description_style = styles[self.description_style]
+            if description_style:
+                description.style = description_style
+            worksheet.append(self._pad_with_empty_cells(worksheet, styles, (description,)))
 
-        description = WriteOnlyCell(worksheet, value=self.description)
-        description_style = styles[self.description_style]
-        if description_style:
-            description.style = description_style
-        worksheet.append((description, ))
-        worksheet.append((None,))
+        if self.title or self.description:
+            worksheet.append(self._pad_with_empty_cells(worksheet, styles, None))
 
     def write(self, worksheet, style_set, objects):
         self.write_title(worksheet, style_set)
@@ -230,6 +241,15 @@ class SheetTemplate(SheetStyleMixin):
             )
             worksheet.add_table(table)
 
+        if self.sheet_protection:
+            worksheet.protection = self.sheet_protection \
+                if type(self.sheet_protection) == SheetProtection \
+                else SheetProtection(
+                    sheet=True,
+                    autoFilter=False,
+            )
+
+
     def _is_row_header(self, row):
         row = deque(row)
         for column in self.columns:
@@ -237,3 +257,15 @@ class SheetTemplate(SheetStyleMixin):
             if value != column.header:
                 return False
         return True
+
+    def _pad_with_empty_cells(self, worksheet, style_set, row=None):
+        padded_row = list(row) if row else []
+
+        for i in range(len(padded_row), len(self.columns)):
+            cell = WriteOnlyCell(ws=worksheet, value=None)
+            style = style_set[self.empty_style]
+            if style:
+                cell.style = style
+            padded_row.append(cell)
+
+        return padded_row

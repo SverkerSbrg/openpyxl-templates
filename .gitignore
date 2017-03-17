@@ -81,3 +81,5 @@ ENV/
 .idea/**
 test_output.xlsx
 ~$**.xlsx
+.idea/
+tests/demo.xlsx

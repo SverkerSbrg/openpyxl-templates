@@ -8,7 +8,12 @@ class WorkbookTemplate(SheetStyleMixin):
 
     styles = Typed("styles", expected_type=StyleSet)
 
+    # defaults for all objects based on names defined by the standard style set
+    empty_style = "empty"
+    title_style = "title"
+    description_style = "description"
     header_style = "header"
+    row_style = "row"
 
     def __init__(self, workbook, sheets=None, active_sheet=None, styles=None, **style_keys):
         super().__init__(**style_keys)
@@ -47,3 +52,7 @@ class WorkbookTemplate(SheetStyleMixin):
             if sheetname == self.active_sheet:
                 self.workbook.active = index
                 return
+
+    def remove_all_sheets(self):
+        for sheetname in self.workbook.sheetnames:
+            self.workbook.remove_sheet(self.workbook.get_sheet_by_name(sheetname))
