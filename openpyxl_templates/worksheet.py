@@ -138,7 +138,8 @@ class SheetTemplate(SheetStyleMixin):
 
         worksheet.append(headers)
         first_cell = headers[0]
-        return first_cell
+        last_cell = headers[-1]
+        return first_cell, last_cell
 
     def write_rows(self, worksheet, style_set, objects):
         styles = tuple(style_set[column.row_style] for column in self.columns)
@@ -180,7 +181,7 @@ class SheetTemplate(SheetStyleMixin):
                     # print("ADDING DATA VALIDATIONS")
                     data_validation.add(cell)
 
-        last_cell = cells[-1]
+        last_cell = cells[-1] if cells else None
 
         return first_cell, last_cell
 
@@ -212,8 +213,8 @@ class SheetTemplate(SheetStyleMixin):
         if title_style:
             title.style = title_style
         worksheet.append(self._pad_with_empty_cells(worksheet, styles, (title,)))
-        # if not self.description:
-        #     worksheet.append(self._pad_with_empty_cells((None,)))
+        if not self.description:
+            worksheet.append(self._pad_with_empty_cells((None,)))
 
     def write_description(self, worksheet, styles):
         if self.description:
@@ -229,18 +230,19 @@ class SheetTemplate(SheetStyleMixin):
     def write(self, worksheet, style_set, objects):
         self.write_title(worksheet, style_set)
         self.write_description(worksheet, style_set)
-        first_header = self.write_headers(worksheet, style_set)
+        first_header, last_header = self.write_headers(worksheet, style_set)
         first_row_cell, last_row_cell = self.write_rows(worksheet, style_set, objects)
         self.style_columns(worksheet, style_set)
 
         if self.format_as_table:
             table = Table(
-                ref="%s:%s" % (first_header.coordinate, last_row_cell.coordinate),
+                ref="%s:%s" % (first_header.coordinate, last_row_cell.coordinate if last_row_cell else last_header.coordinate),
                 displayName=self.sheetname,
                 tableStyleInfo=self.table_style
             )
             worksheet.add_table(table)
 
+        # TODO: TEST, and finish, currently not usable
         if self.sheet_protection:
             worksheet.protection = self.sheet_protection \
                 if type(self.sheet_protection) == SheetProtection \
@@ -248,7 +250,6 @@ class SheetTemplate(SheetStyleMixin):
                     sheet=True,
                     autoFilter=False,
             )
-
 
     def _is_row_header(self, row):
         row = deque(row)

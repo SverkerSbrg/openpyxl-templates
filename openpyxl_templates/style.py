@@ -19,14 +19,12 @@ class StylesMetaClass(type):
     def __new__(mcs, name, bases, classdict):
         result = type.__new__(mcs, name, bases, dict(classdict))
 
-        result._named_styles = OrderedDict(
-            [
-                (attr, column)
-                for attr, column
-                in classdict.items()
-                if column.__class__ in (NamedStyle, ExtendedStyle)
-                ]
-        )
+        if not hasattr(result, "_named_styles"):
+            result._named_styles = OrderedDict()
+
+        for attr, column in classdict.items():
+            if column.__class__ in (NamedStyle, ExtendedStyle):
+                result._named_styles[attr] = column
 
         return result
 

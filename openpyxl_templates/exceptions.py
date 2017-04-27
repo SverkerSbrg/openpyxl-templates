@@ -15,6 +15,10 @@ class ColumnException(OpenpyxlTemplateException):
         super().__init__(message)
 
 
+class ColumnBlankNotAllowed(ColumnException):
+    pass
+
+
 class IllegalMaxLength(ColumnException):
     message = "'{self.[max_length]}' is not valid it must be an integer larger than zero."
 

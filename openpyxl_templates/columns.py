@@ -48,6 +48,13 @@ class Column(ColumnStyleMixin):
     def to_excel(self, value):
         raise NotImplementedError()
 
+    def to_excel_with_blank_check(self, value):
+        if value is None:
+            if self.allow_blank:
+                return None
+            raise BlankNotAllowed()
+        return self.to_excel(value)
+
     def from_excel(self, cell):
         raise NotImplementedError()
 
@@ -62,7 +69,7 @@ class Column(ColumnStyleMixin):
         """Create a cell, object=None implies a request for an cell with default value"""
         return WriteOnlyCell(
             worksheet,
-            value=self.to_excel(
+            value=self.to_excel_with_blank_check(
                 self.get_value_from_object(obj) if obj else None
             )
         )
@@ -77,7 +84,6 @@ class Column(ColumnStyleMixin):
             worksheet.add_data_validation(self.data_validation)
 
     def __str__(self):
-
         return "%s: %s" % (
             self.__class__.__name__,
             "{%s}" % ", ".join(
@@ -90,6 +96,28 @@ class Column(ColumnStyleMixin):
                 )
             )
         )
+
+
+class FormulaColumn(Column):
+    object_attr = "__NOT_APPLICABLE__"
+    formula = Typed("object_attr", expected_type=str, allow_none=False)
+
+    def __init__(self, *args, formula=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.formula = formula or self.formula
+
+    def get_value_from_object(self, obj):
+        return None
+
+    def set_value_to_object(self, obj, value):
+        pass
+
+    def to_excel(self, value):
+        return self.formula
+
+    def from_excel(self, cell):
+        return cell.value
 
 
 class CharColumn(Column):
@@ -168,7 +196,7 @@ class FloatColumn(Column):
     default_value = 0.0
 
     def to_excel(self, value):
-        return value
+        return float(value)
 
     def from_excel(self, cell):
         value = cell.value
