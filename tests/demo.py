@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from enum import Enum, auto
+from enum import Enum
 from os.path import dirname, join
 import random
 
@@ -14,9 +14,9 @@ DIR = dirname(__file__)
 
 
 class Sexes(Enum):
-    MALE = auto()
-    FEMALE = auto()
-    OTHER = auto()
+    MALE = 1
+    FEMALE = 2
+    OTHER = 3
 
 
 class Person:
@@ -112,11 +112,13 @@ class ElementsSheet(SheetTemplate):
         BooleanColumn(object_attr="boolean", header="BooleanColumn", width=18),
         IntegerColumn(object_attr="i", header="IntegerColumn", width=18),
         FloatColumn(object_attr="f", header="FloatColumn", width=15),
-        ChoiceColumn(object_attr="choice", header="ChoiceColumn", width=15, choices=(("Choice 1", 1), ("Choice 2", 2), ("Choice 3", 3))),
+        ChoiceColumn(object_attr="choice", header="ChoiceColumn", width=15,
+                     choices=(("Choice 1", 1), ("Choice 2", 2), ("Choice 3", 3))),
         TimeColumn(object_attr="time", header="TimeColumn", width=18),
         DateColumn(object_attr="date", header="DateColumn", width=20),
         DateTimeColumn(object_attr="datetime", header="DateTimeColumn", width=20, hidden=True)
     ]
+
 
 def generate_element_objects(count=100):
     from_date = datetime(year=1990, month=1, day=1).timestamp()

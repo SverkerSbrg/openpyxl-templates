@@ -214,7 +214,7 @@ class SheetTemplate(SheetStyleMixin):
             title.style = title_style
         worksheet.append(self._pad_with_empty_cells(worksheet, styles, (title,)))
         if not self.description:
-            worksheet.append(self._pad_with_empty_cells((None,)))
+            worksheet.append(self._pad_with_empty_cells(worksheet, styles))
 
     def write_description(self, worksheet, styles):
         if self.description:
