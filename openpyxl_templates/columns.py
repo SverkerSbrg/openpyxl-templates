@@ -108,13 +108,13 @@ class FormulaColumn(Column):
         self.formula = formula or self.formula
 
     def get_value_from_object(self, obj):
-        return None
+        return self.formula
 
     def set_value_to_object(self, obj, value):
         pass
 
     def to_excel(self, value):
-        return self.formula
+        return value
 
     def from_excel(self, cell):
         return cell.value
