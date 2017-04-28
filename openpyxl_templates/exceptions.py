@@ -9,6 +9,14 @@ class OpenpyxlTemplateException(Exception):
         return (message or self.message).format(self=self)
 
 
+class InvalidConfiguration(OpenpyxlTemplateException):
+    pass
+
+
+class CannotGroupLastVisibleColumnAndHideExcessColumns(InvalidConfiguration):
+    message = "Grouping the last column will not render properly when excess columns are hidden."
+
+
 class ColumnException(OpenpyxlTemplateException):
     def __init__(self, message=None, column=None):
         self.column = column

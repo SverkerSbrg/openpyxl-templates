@@ -8,7 +8,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.protection import SheetProtection
 from openpyxl.worksheet.table import Table
 
-from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions, HeaderNotFound
+from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions, HeaderNotFound, \
+    CannotGroupLastVisibleColumnAndHideExcessColumns
 from openpyxl_templates.style import SheetStyleMixin
 from openpyxl_templates.utils import Typed
 
@@ -79,6 +80,8 @@ class SheetTemplate(SheetStyleMixin):
         self.sheet_protection = sheet_protection if sheet_protection is not None else self.sheet_protection
 
         self._column_attrs = list((column.object_attr for column in self.columns))
+
+        self._validate_configuration()
 
     def read_rows(self, worksheet):
         row_number = 0
@@ -186,6 +189,8 @@ class SheetTemplate(SheetStyleMixin):
         return first_cell, last_cell
 
     def style_columns(self, worksheet, style_set):
+        group_start = None
+        group_hidden = False
         for index, column in enumerate(self.columns):
             column_dimension = worksheet.column_dimensions[get_column_letter(index + 1)]
             if column.width is not None:
@@ -195,11 +200,24 @@ class SheetTemplate(SheetStyleMixin):
             if row_style:
                 column_dimension.style = row_style
 
+            if column.group:
+                if not group_start:
+                    group_start = get_column_letter(index + 1)
+                    group_hidden = column.hidden # Group initial state is determined by the first column in the group
+            else:
+                if group_start:
+                    worksheet.column_dimensions.group(start=group_start, end=get_column_letter(index), hidden=group_hidden)
+                    group_start = None
+
             column_dimension.hidden = column.hidden
+
+        if group_start:
+            worksheet.column_dimensions.group(start=group_start, end=None, hidden=group_hidden)
 
         if self.hide_excess_columns:
             for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):
                 worksheet.column_dimensions[get_column_letter(i)].hidden = True
+
 
     def create_empty_row(self, row_number):
         return ExcelRow(self._column_attrs, row_number=row_number)
@@ -270,3 +288,12 @@ class SheetTemplate(SheetStyleMixin):
             padded_row.append(cell)
 
         return padded_row
+
+    def _validate_configuration(self):
+
+        if self.hide_excess_columns:
+            for column in self.columns[::-1]:
+                if column.group:
+                    raise CannotGroupLastVisibleColumnAndHideExcessColumns()
+                if not column.hidden:
+                    break

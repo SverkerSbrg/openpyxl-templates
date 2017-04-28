@@ -111,12 +111,12 @@ class ElementsSheet(SheetTemplate):
         # TextColumn(object_attr="text", header="TextColumn",  width=20, hidden=True),
         BooleanColumn(object_attr="boolean", header="BooleanColumn", width=18),
         IntegerColumn(object_attr="i", header="IntegerColumn", width=18),
-        FloatColumn(object_attr="f", header="FloatColumn", width=15),
+        FloatColumn(object_attr="f", header="FloatColumn", width=15, group=True),
         ChoiceColumn(object_attr="choice", header="ChoiceColumn", width=15,
                      choices=(("Choice 1", 1), ("Choice 2", 2), ("Choice 3", 3))),
         TimeColumn(object_attr="time", header="TimeColumn", width=18),
-        DateColumn(object_attr="date", header="DateColumn", width=20),
-        DateTimeColumn(object_attr="datetime", header="DateTimeColumn", width=20, hidden=True)
+        DateColumn(object_attr="date", header="DateColumn", width=20, group=True, hidden=False),
+        DateTimeColumn(object_attr="datetime", header="DateTimeColumn", width=20, hidden=False)
     ]
 
 

@@ -16,7 +16,7 @@ import sys
 
 setup(
     name='openpyxl-templates',
-    version='0.1.5',
+    version='0.1.6',
     description='A wrapper around openpyxl to simplify reading and writing of tables.',
     # long_description=io.open('README.rst', encoding='utf-8').read() + '\n\n' +
     #     io.open('HISTORY.rst', encoding='utf-8').read(),

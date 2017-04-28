@@ -18,13 +18,14 @@ class Column(ColumnStyleMixin):
     width = Typed("width", expected_types=(int, float), allow_none=True, value=DEFAULT_WIDTH)
 
     hidden = Typed("hidden", expected_type=bool, value=False)
+    group = Typed("group", expected_type=bool, value=False)
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
     default_value = None
     allow_blank = Typed("allow_blank", expected_type=bool, value=True)
 
     BLANK_VALUES = (None, "")
 
-    def __init__(self, object_attr=None, header=None, width=None, hidden=None,
+    def __init__(self, object_attr=None, header=None, width=None, hidden=None, group=None,
                  data_validation=None, default_value=None, allow_blank=None, **style_keys):
         super().__init__(**style_keys)
 
@@ -32,8 +33,8 @@ class Column(ColumnStyleMixin):
         self.header = header or self.header
         self.width = width if width is not None else self.width
 
-        if hidden is not None:
-            self.hidden = hidden
+        self.hidden = hidden if hidden is not None else self.hidden
+        self.group = group if group is not None else self.group
 
         self.data_validation = data_validation or self.data_validation
         self.default_value = default_value or self.default_value
