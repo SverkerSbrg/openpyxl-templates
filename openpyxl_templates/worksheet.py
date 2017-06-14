@@ -1,7 +1,6 @@
 from collections import deque
 
 from openpyxl.cell import WriteOnlyCell
-from openpyxl.styles import Protection
 from openpyxl.styles.table import TableStyle
 from openpyxl.utils import column_index_from_string
 from openpyxl.utils import get_column_letter
@@ -26,6 +25,9 @@ class ExcelRow:
 
         for attr in self.column_attrs:
             setattr(self, attr, None)
+
+    def __repr__(self):
+        return self.__str__()
 
     def __str__(self):
         return "Row %d: {%s}" % (

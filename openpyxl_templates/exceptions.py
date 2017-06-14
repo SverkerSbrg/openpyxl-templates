@@ -46,7 +46,7 @@ class OpenpyxlTemplateCellException(OpenpyxlTemplateException):
 
 
 class BlankNotAllowed(OpenpyxlTemplateCellException):
-    message = "Cell({self[coordinate]}) is empty"
+    message = "Cell({self.coordinate}) is empty"
 
 
 class MaxLengthExceeded(OpenpyxlTemplateCellException):

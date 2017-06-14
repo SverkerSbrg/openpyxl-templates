@@ -4,10 +4,11 @@ from os.path import dirname, join
 import random
 
 from openpyxl import Workbook
+from openpyxl.worksheet import Worksheet
 
 from openpyxl_templates.columns import ChoiceColumn, CharColumn, DateColumn, TextColumn, BooleanColumn, IntegerColumn, \
     FloatColumn, TimeColumn, DateTimeColumn
-from openpyxl_templates.workbook import WorkbookTemplate
+from openpyxl_templates.workbook import WorkbookTemplate, TemplatedWorkbook
 from openpyxl_templates.worksheet import SheetTemplate
 
 DIR = dirname(__file__)
@@ -152,10 +153,20 @@ class DemoTemplate(WorkbookTemplate):
     active_sheet = "Elements"
 
 
+class DemoTemplatedWorkbook(TemplatedWorkbook):
+    persons = PersonsSheet(sheetname="Persons", title="Persons")
+    elements = ElementsSheet(sheetname="Elements")
+
+
 if __name__ == "__main__":
-    workbook = Workbook()
-    template = DemoTemplate(workbook)
-    template.remove_all_sheets()
-    template.write_sheet("Persons", persons)
-    template.write_sheet("Elements", generate_element_objects(count=100))
-    workbook.save(join(DIR, "demo.xlsx").replace('\\', '/'))
+    workbook = DemoTemplatedWorkbook()
+    workbook.persons.write(persons)
+    workbook.elements.write(generate_element_objects(count=100))
+    workbook.save("demo.xlsx")
+    # workbook = Workbook()
+    # template = DemoTemplate(workbook)
+    # template.remove_all_sheets()
+    # template.write_sheet("Persons", persons)
+    # template.write_sheet("Elements", generate_element_objects(count=100))
+    # workbook.save(join(DIR, "demo.xlsx").replace('\\', '/'))
+Worksheet

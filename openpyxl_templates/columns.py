@@ -38,7 +38,7 @@ class Column(ColumnStyleMixin):
 
         self.data_validation = data_validation or self.data_validation
         self.default_value = default_value or self.default_value
-        self.allow_blank = allow_blank or self.allow_blank
+        self.allow_blank = allow_blank if allow_blank is not None else self.allow_blank
 
     def get_value_from_object(self, obj):
         return getattr(obj, self.object_attr)
@@ -62,7 +62,7 @@ class Column(ColumnStyleMixin):
     def from_excel_with_blank_check(self, cell):
         if cell.value in self.BLANK_VALUES:
             if not self.allow_blank:
-                raise BlankNotAllowed(cell)
+                raise BlankNotAllowed(cell=cell)
             return self.default_value
         return self.from_excel(cell)
 
