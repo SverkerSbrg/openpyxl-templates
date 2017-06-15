@@ -122,3 +122,20 @@ class TemplatedWorkbookTestCase(TestCase):
 # Workbook
 # Worksheet
 # load_workbook
+
+
+# class Test():
+#     t = 2
+#     instance = None
+#
+#     def __new__(cls, arg):
+#         print("__new__", arg)
+#         if not cls.instance:
+#             cls.instance = super().__new__(cls)
+#         return cls.instance
+#
+#     def __init__(self, arg):
+#         print("__init__ ", arg)
+#
+# t = Test(2)
+# t = Test(3)

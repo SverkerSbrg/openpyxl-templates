@@ -1,9 +1,5 @@
-from openpyxl import Workbook
-from openpyxl import load_workbook
-
 from openpyxl_templates.style import StyleSet, SheetStyleMixin, StandardStyleSet
 from openpyxl_templates.utils import Typed
-from openpyxl_templates.worksheet import SheetTemplate
 
 
 class WorkbookTemplate(SheetStyleMixin):
@@ -79,7 +75,7 @@ class TemplatedSheet:
         return self.templated_workbook[self.sheet_template.sheetname]
 
     def write(self, data):
-        self.sheet_template.write(self.worksheet, self.templated_workbook.styles, data)
+        self.sheet_template.write(self.worksheet, self.templated_workbook.template_styles, data)
 
     def remove(self):
         if self.exists:
@@ -88,30 +84,3 @@ class TemplatedSheet:
     def activate(self):
         self.templated_workbook.active = self.worksheet
 
-
-class TemplatedWorkbook(Workbook):
-    templated_sheets = None
-
-    def __new__(cls, *args, file=None, **kwargs):
-        if file:
-            return load_workbook(file)
-        return super().__new__(cls)
-
-    def __init__(self):
-        super().__init__()
-
-        self.styles = StandardStyleSet()
-
-        self.templated_sheets = []
-        for attr in dir(self):
-            sheet = getattr(self, attr)
-            if not issubclass(type(sheet), SheetTemplate):
-                continue
-            sheet = TemplatedSheet(self, sheet)
-            self.templated_sheets.append(sheet)
-            setattr(self, attr, sheet)
-
-    def remove_ordinary_sheets(self):
-        templated_sheet_names = {sheet.sheetnamn for sheet in self.templated_sheets}
-        for sheetname in templated_sheet_names:
-            del self[sheetname]
