@@ -1,7 +1,8 @@
 from collections import OrderedDict
 from unittest import TestCase
 
-from openpyxl_templates.sheet import TemplatedWorkbook, TableSheet, TableColumn, TemplatedSheet
+from openpyxl_templates.sheet import TemplatedWorkbook, TableSheet, TableColumn, TemplatedSheet, ColumnHeadersNotUnique, \
+    ColumnIndexNotSet
 from openpyxl_templates.utils import OrderedType, class_property
 
 
@@ -69,12 +70,41 @@ class OrderedTypeTests(TestCase):
 
 
 class TestColumn(TableColumn):
-    header = "Test"
+    _header = "Test"
+
+
+class TableColumnTests(TestCase):
+    def setUp(self):
+        self.column = TableColumn(header="TestColumn")
+
+    def test_column_index_not_set_exception(self):
+        with self.assertRaises(ColumnIndexNotSet):
+            i = self.column.column_index
+
+    def test_auto_column_header(self):
+        column = TableColumn()
+        column.column_index = 1
+
+        self.assertFalse(column._header)
+        header = column.header
+        self.assertIsInstance(header, str)
+        self.assertTrue(header)
+
+    def test_column_letter(self):
+        column = TableColumn()
+
+        for i in range(1, 20):
+            column.column_index = i
+            self.assertEqual(
+                column.column_letter,
+                chr(ord('A') + i - 1)
+            )
 
 
 class TestTemplatedSheet(TableSheet):
-    column1 = TestColumn()
-    column2 = TestColumn()
+    column1 = TestColumn(header="column1")
+    column2 = TestColumn(header="column2")
+    column3 = TestColumn(header="column3")
 
 
 class TemplatedSheetTestCase(TestCase):
@@ -83,9 +113,23 @@ class TemplatedSheetTestCase(TestCase):
 
     def test_columns(self):
         self.assertEqual(
-            [self.sheet.column1, self.sheet.column2],
+            [self.sheet.column1, self.sheet.column2, self.sheet.column3],
             self.sheet.columns
         )
+
+    def test_column_headers_not_unique_exception(self):
+        class InvalidSheet(TableSheet):
+            column1 = TestColumn(header="header")
+            column2 = TestColumn(header="header")
+
+        with self.assertRaises(ColumnHeadersNotUnique):
+            InvalidSheet(sheetname="invalid_sheet")
+
+    def test_set_column_index(self):
+        self.assertEqual(self.sheet.column1.column_index, 1)
+        self.assertEqual(self.sheet.column2.column_index, 2)
+        self.assertEqual(self.sheet.column3.column_index, 3)
+
 
 
 class TestTemplatedWorkbook(TemplatedWorkbook):

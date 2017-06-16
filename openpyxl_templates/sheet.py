@@ -1,13 +1,14 @@
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from types import FunctionType
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from openpyxl_templates.columns import Column
-from openpyxl_templates.exceptions import BlankNotAllowed
+from openpyxl_templates.exceptions import BlankNotAllowed, OpenpyxlTemplateException
 from openpyxl_templates.style import StyleSet, StandardStyleSet
 from openpyxl_templates.utils import Typed, OrderedType
 
@@ -58,16 +59,23 @@ class TemplatedSheet(metaclass=OrderedType):
         self.workbook.active = self.worksheet
 
 
+class ColumnIndexNotSet(OpenpyxlTemplateException):
+    def __init__(self, column):
+        super().__init__(
+            "Column index not set for column '%s'. This should be done automatically by the TableSheet." % column
+        )
+
+
 DEFAULT_COLUMN_WIDTH = 8.43
 
 
 class TableColumn:
     setter = Typed("setter", expected_type=FunctionType, allow_none=True)
     getter = Typed("getter", expected_type=FunctionType, allow_none=True)
-    column_index = Typed("column_index", expected_type=int, allow_none=True)  # set by sheet
+    _column_index = None
 
     # Rendering properties
-    header = Typed("header", expected_type=str, allow_none=True)
+    _header = Typed("header", expected_type=str, allow_none=True)
     width = Typed("width", expected_types=(int, float), value=8.43)
     hidden = Typed("hidden", expected_type=bool, value=False)
     group = Typed("group", expected_type=bool, value=False)
@@ -81,7 +89,7 @@ class TableColumn:
 
     def __init__(self, object_attr=None, getter=None, setter=None, header=None, width=None, hidden=None, group=None,
                  data_validation=None, default_value=None, allow_blank=None):
-        self.header = header if header is not None else self.header
+        self._header = header if header is not None else self._header
         self.width = width if width is not None else self.width
         self.hidden = hidden if hidden is not None else self.hidden
         self.group = group if group is not None else self.group
@@ -123,14 +131,27 @@ class TableColumn:
             return self.default_value
         return self.from_excel(cell)
 
-    def style_worksheet(self, worksheet, column_dimension):
+    def prepare_worksheet(self, worksheet):
+        #    AddDataValidations
+        pass
+
+    def create_header(self):
+        pass
+
+    def post_process_worksheet(self, worksheet):
+        #     Hide
+        #     SetWidth
+        #     ColumnStyle
+        pass
+
+    def style_worksheet(self, worksheet, column_dimension): # TODO: Replace with post_process_worksheet
         if self.width is not None:
             column_dimension.width = self.width
 
         column_dimension.hidden = self.hidden
 
-        if self.data_validation:
-            worksheet.add_data_validation(self.data_validation)
+        # if self.data_validation:
+        #     worksheet.add_data_validation(self.data_validation)
 
     def create_cell(self, worksheet, obj=None):
         return WriteOnlyCell(
@@ -139,6 +160,35 @@ class TableColumn:
                 self.get_value(obj) if obj is not None else self.default_value
             )
         )
+
+    @property
+    def header(self):
+        return self._header or "Column%d" % self.column_index
+
+    @property
+    def column_index(self):
+        if self._column_index is None:
+            raise ColumnIndexNotSet(self)
+        return self._column_index
+
+    @column_index.setter
+    def column_index(self, value):
+        self._column_index = value
+
+    @property
+    def column_letter(self):
+        return get_column_letter(self.column_index)
+
+
+class ColumnHeadersNotUnique(OpenpyxlTemplateException):
+    def __init__(self, columns):
+        counter = Counter(column.header for column in columns)
+        super().__init__("headers '%s' has been declared more then once in the same TableSheet" % tuple(
+            header
+            for (header, count)
+            in counter.items()
+            if count > 1
+        ))
 
 
 class TableSheet(TemplatedSheet):
@@ -152,7 +202,57 @@ class TableSheet(TemplatedSheet):
 
         self.columns = list(self._items.values())
 
+        for index, column in enumerate(self.columns):
+            column.column_index = index + 1  # Start as 1
+
+        self._validate()
+
+    def _validate(self):
+        self._check_unique_column_headers()
+
+    def _check_unique_column_headers(self):
+        if len(set(column.header for column in self.columns)) < len(self.columns):
+            raise ColumnHeadersNotUnique(self.columns)
+
+
+
     def write(self, title=None, description=None, objects=None):
+        worksheet = self.worksheet
+
+        self.prepare_worksheet(worksheet)
+        self.write_title(worksheet, title)
+        self.write_description(worksheet, description)
+        self.write_headers(worksheet)
+        self.write_rows(worksheet, objects)
+        self.post_process_worksheet(worksheet)
+        pass
+
+    def prepare_worksheet(self, worksheet):
+        # Columns.prepare_worksheet(worksheet)
+        #    AddDataValidations
+        pass
+
+    def write_title(self, worksheet, title=None):
+        pass
+
+    def write_description(self, worksheet, description=None):
+        pass
+
+    def write_headers(self, worksheet):
+        pass
+
+    def write_rows(self, worksheet, objects=None):
+        pass
+
+    def post_process_worksheet(self, worksheet):
+        # Columns.post_process_worksheet
+        #     Hide
+        #     SetWidth
+        #     ColumnStyle
+        # Group
+        # FreezePane
+        # FormatAsTable
+        # HideExcessColumns
         pass
 
     def read(self, exception_policy):
