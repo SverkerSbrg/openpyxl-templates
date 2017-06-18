@@ -56,7 +56,7 @@ class StyleSet(dict, metaclass=StylesMetaClass):
         # self._style_hash_map = {}
 
         for key, style in chain(self._named_styles.items(), styles.items()):
-            self[key] = style
+            self[style.name] = style
 
     def __setitem__(self, key, style):
         if type(key) != str:
@@ -129,68 +129,72 @@ class StyleSet(dict, metaclass=StylesMetaClass):
             kwargs.update({key: value for key, value in update.items() if value is not None})
         return object_class(**kwargs)
 
+    @property
+    def names(self):
+        return tuple(style.name for style in self.values())
+
 
 class StandardStyleSet(StyleSet):
     default = NamedStyle(name="Default")
     empty = ExtendedStyle(
-        base="default",
+        base="Default",
         name="Empty",
         border=ColoredBorders("FFFFFFFF")
     )
     title = ExtendedStyle(
-        base="empty",
+        base="Empty",
         name="Title",
         font={"size": 20},
     )
     description = ExtendedStyle(
-        base="empty",
+        base="Empty",
         name="Description",
         font={"color": "FF777777"}
     )
     header = ExtendedStyle(
-        base="default",
+        base="Default",
         name="Header",
         font={"bold": True, "color": "FFFFFFFF"}, fill=SolidFill(_Colors.DARK_BLUE)
     )
     header_center = ExtendedStyle(
-        base="header",
+        base="Header",
         name="Header, center",
         alignment={"horizontal": "center"}
     )
     row = ExtendedStyle(
-        base="default",
+        base="Default",
         name="Row",
         protection={"locked": False}
     )
     row_char = ExtendedStyle(
-        base="row",
+        base="Row",
         name="Row, string",
         number_format="@",
     )
     row_text = ExtendedStyle(
-        base="row",
+        base="Row",
         name="Row, text",
         number_format="@",
         alignment={"wrap_text": True}
     )
     row_integer = ExtendedStyle(
-        base="row",
+        base="Row",
         name="Row, integer",
         number_format="# ##0",
     )
     row_float = ExtendedStyle(
-        base="row",
+        base="Row",
         name="Row, decimal",
         number_format="0.00",
     )
     row_date = ExtendedStyle(
-        base="row",
+        base="Row",
         name="Row, date",
         alignment={"horizontal": "center"},
         number_format="yyyy-mm-dd"
     )
     row_time = ExtendedStyle(
-        base="row",
+        base="Row",
         name="Row, time",
         alignment={"horizontal": "center"},
         number_format="h:mm"

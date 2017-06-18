@@ -1,31 +1,36 @@
-from collections import OrderedDict, Counter
+from collections import Counter
+from itertools import chain
 from types import FunctionType
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.cell import WriteOnlyCell
-from openpyxl.utils import get_column_letter
+from openpyxl.utils import get_column_letter, column_index_from_string
 from openpyxl.worksheet.datavalidation import DataValidation
 
-from openpyxl_templates.columns import Column
 from openpyxl_templates.exceptions import BlankNotAllowed, OpenpyxlTemplateException
 from openpyxl_templates.style import StyleSet, StandardStyleSet
 from openpyxl_templates.utils import Typed, OrderedType
 
+MAX_COLUMN_INDEX = column_index_from_string("XFD")
 
-class Test():
-    t = 2
+class TemplatedWorkbookNotSet(OpenpyxlTemplateException):
+    def __init__(self, templated_sheet):
+        super().__init__(
+            "The sheet '%s' has no assosiated workbook. This should be done automatically by the TemplatedWorkbook."
+            % templated_sheet.sheetname
+        )
 
-    def __new__(cls, *args, **kwargs):
-        print(args, kwargs)
-
-        super().__new__(cls, *args, **kwargs)
-
+class WorksheetDoesNotExist(OpenpyxlTemplateException):
+    def __init__(self, templated_sheet):
+        super().__init__(
+            "The workbook has no sheet '%s'." % templated_sheet.sheetname
+        )
 
 class TemplatedSheet(metaclass=OrderedType):
     sheetname = Typed("sheetname", expected_type=str)
     active = Typed("active", expected_type=bool, value=False)
-    workbook = Typed("workbook", expected_type=Workbook, allow_none=True)
+    _workbook = None
 
     # order = ... # TODO: Add ordering to sheets either through declaration on workbook or here
 
@@ -44,6 +49,24 @@ class TemplatedSheet(metaclass=OrderedType):
 
         return self.workbook[self.sheetname]
 
+    @property
+    def workbook(self):
+        if not self._workbook:
+            raise TemplatedWorkbookNotSet(self)
+        return self._workbook
+
+    @workbook.setter
+    def workbook(self, workbook):
+        self._workbook = workbook
+
+    @property
+    def sheet_index(self):
+        try:
+            return self.workbook.sheetnames.index(self.sheetname)
+        except ValueError:
+            raise WorksheetDoesNotExist(self)
+
+
     def write(self, *args, overwrite=True, **kwargs):
         raise NotImplemented()
         # 'self.sheet_template.write(self.worksheet, self.templated_workbook.styles, data)
@@ -56,7 +79,7 @@ class TemplatedSheet(metaclass=OrderedType):
             del self.workbook[self.sheetname]
 
     def activate(self):
-        self.workbook.active = self.worksheet
+        self.workbook.active = self.sheet_index
 
 
 class ColumnIndexNotSet(OpenpyxlTemplateException):
@@ -84,6 +107,9 @@ class TableColumn:
     # Reading/writing properties
     default_value = None  # internal value
     allow_blank = Typed("allow_blank", expected_type=bool, value=True)
+
+    header_style = Typed("header_style", expected_type=str, value="Header")
+    row_style = Typed("row_style", expected_type=str, value="Row")
 
     BLANK_VALUES = (None, "")
 
@@ -132,34 +158,32 @@ class TableColumn:
         return self.from_excel(cell)
 
     def prepare_worksheet(self, worksheet):
-        #    AddDataValidations
-        pass
+        if self.data_validation:
+            worksheet.add_data_validation(self.data_validation)
 
-    def create_header(self):
-        pass
-
-    def post_process_worksheet(self, worksheet):
-        #     Hide
-        #     SetWidth
-        #     ColumnStyle
-        pass
-
-    def style_worksheet(self, worksheet, column_dimension): # TODO: Replace with post_process_worksheet
-        if self.width is not None:
-            column_dimension.width = self.width
-
-        column_dimension.hidden = self.hidden
-
-        # if self.data_validation:
-        #     worksheet.add_data_validation(self.data_validation)
+    def create_header(self, worksheet):
+        header = WriteOnlyCell(ws=worksheet, value=self.header)
+        header.style = self.header_style
+        return header
 
     def create_cell(self, worksheet, obj=None):
-        return WriteOnlyCell(
+        cell =  WriteOnlyCell(
             worksheet,
             value=self.to_excel_with_blank_check(
                 self.get_value(obj) if obj is not None else self.default_value
             )
         )
+        cell.style = self.row_style
+        return cell
+
+    def post_process_cell(self, worksheet, cell):
+        if self.data_validation:
+            self.data_validation.add(cell)
+
+    def post_process_worksheet(self, worksheet):
+        column_dimension = worksheet.column_dimensions[self.column_letter]
+        column_dimension.hidden = self.hidden
+        column_dimension.width = self.width
 
     @property
     def header(self):
@@ -191,14 +215,33 @@ class ColumnHeadersNotUnique(OpenpyxlTemplateException):
         ))
 
 
+class TempleteStyleNotFound(OpenpyxlTemplateException):
+    def __init__(self, missing_style_name, style_set):
+        super().__init__(
+            "The style '%s' has not been declared. Avaliable styles are: %s)"
+            % (missing_style_name, style_set.names)
+        )
+
+
+class NoTableColumns(OpenpyxlTemplateException):
+    def __init__(self, table_sheet):
+        super().__init__(
+            "The TableSheet '%s' has no columns. Declare atleast one."
+            % table_sheet.sheetname
+        )
+
+
 class TableSheet(TemplatedSheet):
     item_class = TableColumn
+
+    title_style = Typed("title_style", expected_type=str, value="Title")
+    description_style = Typed("description_style", expected_type=str, value="Description")
 
     freeze_header = Typed("freeze_header", expected_type=bool, value=True)
     hide_excess_columns = Typed("hide_excess_columns", expected_type=bool, value=True)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, sheetname=None, active=None):
+        super().__init__(sheetname=sheetname, active=active)
 
         self.columns = list(self._items.values())
 
@@ -208,13 +251,16 @@ class TableSheet(TemplatedSheet):
         self._validate()
 
     def _validate(self):
+        self._check_atleast_one_column()
         self._check_unique_column_headers()
+
+    def _check_atleast_one_column(self):
+        if not self.columns:
+            raise NoTableColumns(self)
 
     def _check_unique_column_headers(self):
         if len(set(column.header for column in self.columns)) < len(self.columns):
             raise ColumnHeadersNotUnique(self.columns)
-
-
 
     def write(self, title=None, description=None, objects=None):
         worksheet = self.worksheet
@@ -225,35 +271,66 @@ class TableSheet(TemplatedSheet):
         self.write_headers(worksheet)
         self.write_rows(worksheet, objects)
         self.post_process_worksheet(worksheet)
-        pass
 
     def prepare_worksheet(self, worksheet):
-        # Columns.prepare_worksheet(worksheet)
-        #    AddDataValidations
-        pass
+        for column in self.columns:
+            column.prepare_worksheet(worksheet)
+
+        # Register styles
+        style_names = set(chain(
+            (self.title_style, self.description_style),
+            *((column.row_style, column.header_style) for column in self.columns)
+        ))
+
+        existing_names = set(self.workbook.named_styles)
+
+        for name in style_names:
+            if name in existing_names:
+                continue
+
+            if name not in self.workbook.template_styles:
+                raise TempleteStyleNotFound(name, self.workbook.template_styles)
+
+            self.workbook.add_named_style(self.workbook.template_styles[name])
 
     def write_title(self, worksheet, title=None):
-        pass
+        if not title:
+            return
+
+        title = WriteOnlyCell(ws=worksheet, value=title)
+        title.style = self.title_style
+
+        worksheet.append((title,))
 
     def write_description(self, worksheet, description=None):
-        pass
+        if not description:
+            return
+
+        description = WriteOnlyCell(ws=worksheet, value=description)
+        description.style = self.description_style
+
+        worksheet.append((description,))
 
     def write_headers(self, worksheet):
-        pass
+        self.worksheet.append(
+            column.create_header(worksheet)
+            for column in self.columns
+        )
 
     def write_rows(self, worksheet, objects=None):
-        pass
+        for obj in objects:
+            cells = tuple(column.create_cell(worksheet, obj) for column in self.columns)
+            worksheet.append(cells)
+
+            for cell, column in zip(cells, self.columns):
+                column.post_process_cell(worksheet, cell)
 
     def post_process_worksheet(self, worksheet):
-        # Columns.post_process_worksheet
-        #     Hide
-        #     SetWidth
-        #     ColumnStyle
-        # Group
-        # FreezePane
-        # FormatAsTable
-        # HideExcessColumns
-        pass
+        for column in self.columns:
+            column.post_process_worksheet(worksheet)
+
+        if self.active:
+            self.activate()
 
     def read(self, exception_policy):
         pass
@@ -274,9 +351,10 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
         super().__init__()
 
         self.templated_sheets = list(self._items.values())
+        for sheet in self.templated_sheets:
+            sheet.workbook = self
         self.template_styles = template_styles or self.template_styles or StandardStyleSet()
 
-    def remove_ordinary_sheets(self):
-        templated_sheet_names = {sheet.sheetnamn for sheet in self.templated_sheets}
-        for sheetname in templated_sheet_names:
+    def remove_all_sheets(self):
+        for sheetname in self.sheetnames:
             del self[sheetname]

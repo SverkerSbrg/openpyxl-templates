@@ -1,13 +1,11 @@
 from unittest import TestCase
 
 from openpyxl import Workbook
-from openpyxl import load_workbook
-from openpyxl.worksheet import Worksheet
-
-from openpyxl_templates.columns import CharColumn
-from openpyxl_templates.exceptions import BlankNotAllowed, CellExceptions
-from openpyxl_templates.workbook import TemplatedWorkbook, TemplatedSheet
 from openpyxl_templates.worksheet import SheetTemplate, RowExceptionPolicy
+
+from openpyxl_templates.exceptions import BlankNotAllowed, CellExceptions
+from openpyxl_templates.old.columns import CharColumn
+from openpyxl_templates.old.workbook import TemplatedWorkbook, TemplatedSheet
 from tests.demo import DemoTemplate
 
 

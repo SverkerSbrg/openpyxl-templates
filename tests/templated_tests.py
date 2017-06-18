@@ -2,7 +2,7 @@ from collections import OrderedDict
 from unittest import TestCase
 
 from openpyxl_templates.sheet import TemplatedWorkbook, TableSheet, TableColumn, TemplatedSheet, ColumnHeadersNotUnique, \
-    ColumnIndexNotSet
+    ColumnIndexNotSet, NoTableColumns
 from openpyxl_templates.utils import OrderedType, class_property
 
 
@@ -130,6 +130,14 @@ class TemplatedSheetTestCase(TestCase):
         self.assertEqual(self.sheet.column2.column_index, 2)
         self.assertEqual(self.sheet.column3.column_index, 3)
 
+    def test_no_table_columns_exeption(self):
+        class NoColumnsTableSheet(TableSheet):
+            pass
+
+        with self.assertRaises(NoTableColumns):
+            ws = NoColumnsTableSheet(sheetname="no_columns")
+
+
 
 
 class TestTemplatedWorkbook(TemplatedWorkbook):
@@ -141,7 +149,7 @@ class InheritingTemplatedWorkbook(TestTemplatedWorkbook):
     sheet2 = TestTemplatedSheet(sheetname="Test2")
 
 
-class TemplatedTests(TestCase):
+class TemplatedWorkbookTests(TestCase):
     def setUp(self):
         self.wb = TestTemplatedWorkbook()
 
@@ -150,4 +158,30 @@ class TemplatedTests(TestCase):
             [self.wb.sheet1, self.wb.sheet2],
             self.wb.templated_sheets
         )
+
+    def test_templated_sheets_workbook(self):
+        for sheet in self.wb.templated_sheets:
+            self.assertEqual(sheet.workbook, self.wb)
+
+    def test_exists_false(self):
+        self.assertFalse(self.wb.sheet1.exists)
+
+    def test_exists_true(self):
+        # Automatically create on access.
+        ws = self.wb.sheet1.worksheet
+        self.assertTrue(self.wb.sheet1.exists)
+
+    def test_sheet_index(self):
+        self.wb.remove_all_sheets()
+
+        ws = self.wb.sheet1.worksheet
+        ws = self.wb.sheet2.worksheet
+
+        self.assertEqual(0, self.wb.sheet1.sheet_index)
+        self.assertEqual(1, self.wb.sheet2.sheet_index)
+
+
+    # def test
+
+
 

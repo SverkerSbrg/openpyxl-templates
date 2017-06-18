@@ -3,13 +3,10 @@ from os.path import dirname, join
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
-from openpyxl.styles import Font
-from openpyxl.styles import NamedStyle
-
-from openpyxl_templates.columns import CharColumn, IntegerColumn, ChoiceColumn, DateTimeColumn, TimeColumn
-from openpyxl_templates.utils import SolidFill
-from openpyxl_templates.workbook import WorkbookTemplate
 from openpyxl_templates.worksheet import SheetTemplate, RowExceptionPolicy
+
+from openpyxl_templates.old.columns import CharColumn, IntegerColumn, ChoiceColumn, DateTimeColumn, TimeColumn
+from openpyxl_templates.old.workbook import WorkbookTemplate
 
 BASE_DIR = dirname(__file__)
 

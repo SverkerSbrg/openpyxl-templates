@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from openpyxl.styles import NamedStyle, Font
 
-from openpyxl_templates.workbook import StyleSet, ExtendedStyle
+from openpyxl_templates.old.workbook import StyleSet, ExtendedStyle
 
 
 class StyleSetTest(TestCase):

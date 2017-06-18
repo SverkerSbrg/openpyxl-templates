@@ -1,15 +1,14 @@
+import random
 from datetime import date, datetime
 from enum import Enum
-from os.path import dirname, join
-import random
+from os.path import dirname
 
-from openpyxl import Workbook
-from openpyxl.worksheet import Worksheet
-
-from openpyxl_templates.columns import ChoiceColumn, CharColumn, DateColumn, TextColumn, BooleanColumn, IntegerColumn, \
-    FloatColumn, TimeColumn, DateTimeColumn
-from openpyxl_templates.workbook import WorkbookTemplate, TemplatedWorkbook
 from openpyxl_templates.worksheet import SheetTemplate
+
+from openpyxl_templates.old.columns import ChoiceColumn, CharColumn, DateColumn, BooleanColumn, IntegerColumn, \
+    FloatColumn, TimeColumn, DateTimeColumn
+from openpyxl_templates.old.workbook import WorkbookTemplate
+from openpyxl_templates.sheet import TemplatedWorkbook, TableSheet, TableColumn
 
 DIR = dirname(__file__)
 
@@ -26,6 +25,10 @@ class Person:
         self.last_name = last_name
         self.date_of_birth = date_of_birth
         self.sex = sex
+
+    @property
+    def name(self):
+        return "%s %s" % (self.first_name, self.last_name)
 
 
 persons = (
@@ -153,15 +156,18 @@ class DemoTemplate(WorkbookTemplate):
     active_sheet = "Elements"
 
 
+class TemplatedPersonsSheet(TableSheet):
+    first_name = TableColumn(object_attr="first_name", header="First name", width=15)
+    last_name = TableColumn(object_attr="last_name", header="Last name", width=15)
+
+
 class DemoTemplatedWorkbook(TemplatedWorkbook):
-    persons = PersonsSheet(sheetname="Persons", title="Persons")
-    elements = ElementsSheet(sheetname="Elements")
+    persons = TemplatedPersonsSheet(sheetname="Persons", active=True)
 
 
 if __name__ == "__main__":
     workbook = DemoTemplatedWorkbook()
-    workbook.persons.write(persons)
-    workbook.elements.write(generate_element_objects(count=100))
+    workbook.persons.write(objects=persons, title="Persons")
     workbook.save("demo.xlsx")
     # workbook = Workbook()
     # template = DemoTemplate(workbook)
@@ -169,4 +175,3 @@ if __name__ == "__main__":
     # template.write_sheet("Persons", persons)
     # template.write_sheet("Elements", generate_element_objects(count=100))
     # workbook.save(join(DIR, "demo.xlsx").replace('\\', '/'))
-Worksheet
