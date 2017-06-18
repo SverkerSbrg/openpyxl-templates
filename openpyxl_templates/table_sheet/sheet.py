@@ -2,11 +2,13 @@ from collections import Counter
 from itertools import chain
 
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.table import Table
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateException
 from openpyxl_templates.table_sheet.columns import TableColumn
 from openpyxl_templates.templated_sheet import TemplatedSheet
-from openpyxl_templates.utils import Typed
+from openpyxl_templates.utils import Typed, MAX_COLUMN_INDEX
 
 
 class ColumnHeadersNotUnique(OpenpyxlTemplateException):
@@ -42,8 +44,14 @@ class TableSheet(TemplatedSheet):
     title_style = Typed("title_style", expected_type=str, value="Title")
     description_style = Typed("description_style", expected_type=str, value="Description")
 
+    format_as_table = Typed("format_as_header", expected_type=bool, value=True)
     freeze_header = Typed("freeze_header", expected_type=bool, value=True)
     hide_excess_columns = Typed("hide_excess_columns", expected_type=bool, value=True)
+
+    _first_data_cell = None
+    _last_data_cell = None
+    _first_header_cell = None
+    _last_header_cell = None
 
     def __init__(self, sheetname=None, active=None):
         super().__init__(sheetname=sheetname, active=active)
@@ -117,18 +125,31 @@ class TableSheet(TemplatedSheet):
         worksheet.append((description,))
 
     def write_headers(self, worksheet):
-        self.worksheet.append(
+        headers = tuple(
             column.create_header(worksheet)
             for column in self.columns
         )
 
+        self.worksheet.append(headers)
+
+        self._first_header_cell = headers[0]
+        self._last_header_cell = headers[-1]
+
     def write_rows(self, worksheet, objects=None):
+        self._first_data_cell = None
+        cells = None
         for obj in objects:
             cells = tuple(column.create_cell(worksheet, obj) for column in self.columns)
             worksheet.append(cells)
 
+            if not self._first_data_cell:
+                self._first_data_cell = cells[0]
+
             for cell, column in zip(cells, self.columns):
                 column.post_process_cell(worksheet, cell)
+
+        if cells:
+            self._last_data_cell = cells[-1]
 
     def post_process_worksheet(self, worksheet):
         for column in self.columns:
@@ -136,6 +157,24 @@ class TableSheet(TemplatedSheet):
 
         if self.active:
             self.activate()
+
+        if self.format_as_table:
+            worksheet.add_table(
+                Table(
+                    ref="%s:%s" % (
+                        self._first_header_cell.coordinate,
+                        self._last_data_cell.coordinate if self._last_data_cell else self._last_header_cell.coordinate
+                    ),
+                    displayName=self.sheetname,
+                )
+            )
+
+        if self.freeze_header:
+            worksheet.freeze_panes = self._first_data_cell or self._first_header_cell
+
+        if self.hide_excess_columns:
+            for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):
+                worksheet.column_dimensions[get_column_letter(i)].hidden = True
 
     def read(self, exception_policy):
         pass

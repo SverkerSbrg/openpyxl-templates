@@ -8,6 +8,7 @@ from openpyxl_templates.old.columns import ChoiceColumn, CharColumn, DateColumn,
     FloatColumn, TimeColumn, DateTimeColumn
 from openpyxl_templates.old.workbook import WorkbookTemplate
 from openpyxl_templates.old.worksheet import SheetTemplate
+from openpyxl_templates.style import DefaultStyleSet, _Colors
 from openpyxl_templates.table_sheet.columns import TableColumn
 from openpyxl_templates.table_sheet.sheet import TableSheet
 from openpyxl_templates.templated_workbook import TemplatedWorkbook
@@ -162,13 +163,15 @@ class TemplatedPersonsSheet(TableSheet):
     first_name = TableColumn(object_attr="first_name", header="First name", width=15)
     last_name = TableColumn(object_attr="last_name", header="Last name", width=15)
 
+    hide_excess_columns = False
+
 
 class DemoTemplatedWorkbook(TemplatedWorkbook):
     persons = TemplatedPersonsSheet(sheetname="Persons", active=True)
 
 
 if __name__ == "__main__":
-    workbook = DemoTemplatedWorkbook()
+    workbook = DemoTemplatedWorkbook(template_styles=DefaultStyleSet(accent_color=_Colors.DARK_RED))
     workbook.persons.write(objects=persons, title="Persons")
     workbook.save("demo.xlsx")
     # workbook = Workbook()
