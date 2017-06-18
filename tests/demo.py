@@ -3,12 +3,14 @@ from datetime import date, datetime
 from enum import Enum
 from os.path import dirname
 
-from openpyxl_templates.worksheet import SheetTemplate
 
 from openpyxl_templates.old.columns import ChoiceColumn, CharColumn, DateColumn, BooleanColumn, IntegerColumn, \
     FloatColumn, TimeColumn, DateTimeColumn
 from openpyxl_templates.old.workbook import WorkbookTemplate
-from openpyxl_templates.sheet import TemplatedWorkbook, TableSheet, TableColumn
+from openpyxl_templates.old.worksheet import SheetTemplate
+from openpyxl_templates.table_sheet.columns import TableColumn
+from openpyxl_templates.table_sheet.sheet import TableSheet
+from openpyxl_templates.templated_workbook import TemplatedWorkbook
 
 DIR = dirname(__file__)
 

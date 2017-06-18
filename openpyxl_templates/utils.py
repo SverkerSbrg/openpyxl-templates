@@ -4,7 +4,9 @@ from openpyxl.styles import Border
 from openpyxl.styles import Side
 from openpyxl.styles.borders import BORDER_MEDIUM
 from openpyxl.styles.fills import FILL_SOLID, PatternFill
+from openpyxl.utils import column_index_from_string
 
+MAX_COLUMN_INDEX = column_index_from_string("XFD")
 
 def _color(color):
     if len(color) == 6:

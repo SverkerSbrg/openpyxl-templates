@@ -1,8 +1,9 @@
 from collections import OrderedDict
 from unittest import TestCase
 
-from openpyxl_templates.sheet import TemplatedWorkbook, TableSheet, TableColumn, TemplatedSheet, ColumnHeadersNotUnique, \
-    ColumnIndexNotSet, NoTableColumns
+from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet
+from openpyxl_templates.table_sheet.sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns
+from openpyxl_templates.templated_workbook import TemplatedWorkbook
 from openpyxl_templates.utils import OrderedType, class_property
 
 
@@ -180,8 +181,6 @@ class TemplatedWorkbookTests(TestCase):
         self.assertEqual(0, self.wb.sheet1.sheet_index)
         self.assertEqual(1, self.wb.sheet2.sheet_index)
 
-
-    # def test
 
 
 
