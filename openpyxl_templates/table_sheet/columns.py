@@ -15,12 +15,19 @@ class ColumnIndexNotSet(OpenpyxlTemplateException):
         )
 
 
+class ObjectAttributeNotSet(OpenpyxlTemplateException):
+    def __init__(self, column):
+        super().__init__(
+            "object_attribute not set for column '%s'. This should be done automatically by the TableSheet. "
+            "The attributed must be assigned explicitly if added after class declaration" % column
+        )
+
 DEFAULT_COLUMN_WIDTH = 8.43
 
 
 class TableColumn:
-    setter = Typed("setter", expected_type=FunctionType, allow_none=True)
-    getter = Typed("getter", expected_type=FunctionType, allow_none=True)
+    _object_attribute = Typed("_object_attribute", expected_type=str, allow_none=True)
+    source = Typed("source", expected_types=(str, FunctionType), allow_none=True)
     _column_index = None
 
     # Rendering properties
@@ -39,7 +46,7 @@ class TableColumn:
 
     BLANK_VALUES = (None, "")
 
-    def __init__(self, object_attr=None, getter=None, setter=None, header=None, width=None, hidden=None, group=None,
+    def __init__(self, object_attribute=None, source=None, header=None, width=None, hidden=None, group=None,
                  data_validation=None, default_value=None, allow_blank=None):
         self._header = header if header is not None else self._header
         self.width = width if width is not None else self.width
@@ -50,18 +57,23 @@ class TableColumn:
         self.default_value = default_value if default_value is not None else self.default_value
         self.allow_blank = allow_blank if allow_blank is not None else self.allow_blank
 
-        if object_attr:
-            self.getter = lambda obj: getattr(obj, object_attr)
-            self.setter = lambda obj, value: setattr(obj, object_attr, value)
+        self._object_attribute = object_attribute if object_attribute is not None else self._object_attribute
+        self.source = source if source is not None else self.source
 
-        self.getter = getter if getter is not None else self.getter
-        self.setter = setter if setter is not None else self.setter
+    # def get_value(self, obj):
+    #     return self.getter(obj)
+    #
+    # def set_value(self, obj, value):
+    #     self.setter(obj, value)
 
-    def get_value(self, obj):
-        return self.getter(obj)
+    def get_value_from_object(self, object):
+        if isinstance(object, (list, tuple)):
+            return object[self.column_index]
 
-    def set_value(self, obj, value):
-        self.setter(obj, value)
+        if isinstance(object, dict):
+            return object[self.object_attribute]
+
+        return getattr(object, self.object_attribute, None)
 
     def to_excel(self, value):
         return value
@@ -92,12 +104,10 @@ class TableColumn:
         header.style = self.header_style
         return header
 
-    def create_cell(self, worksheet, obj=None):
-        cell =  WriteOnlyCell(
+    def create_cell(self, worksheet, value=None):
+        cell = WriteOnlyCell(
             worksheet,
-            value=self.to_excel_with_blank_check(
-                self.get_value(obj) if obj is not None else self.default_value
-            )
+            value=self.to_excel_with_blank_check(value or self.default_value)
         )
         cell.style = self.row_style
         return cell
@@ -128,3 +138,14 @@ class TableColumn:
     @property
     def column_letter(self):
         return get_column_letter(self.column_index)
+
+    @property
+    def object_attribute(self):
+        if self._object_attribute is None:
+            raise ObjectAttributeNotSet(self)
+
+        return self._object_attribute
+
+
+
+# class FormulaColumn(Column):

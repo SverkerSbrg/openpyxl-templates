@@ -1,4 +1,6 @@
+from timeit import timeit
 from collections import OrderedDict
+from collections import deque
 from unittest import TestCase
 
 from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet
@@ -181,6 +183,30 @@ class TemplatedWorkbookTests(TestCase):
         self.assertEqual(0, self.wb.sheet1.sheet_index)
         self.assertEqual(1, self.wb.sheet2.sheet_index)
 
-
-
+    # def test_timeit(self):
+    #
+    #     def gen():
+    #         print("gen starting")
+    #         for i in range(1, 1000):
+    #             yield i
+    #         print("gen done")
+    #
+    #     def iter_generator():
+    #         g = gen()
+    #         print("iter_gen created")
+    #         for i in g:
+    #             x = i
+    #         print("iter_gen done")
+    #
+    #     def iter_deque():
+    #         q = deque(gen())
+    #         print("iter_deque created")
+    #         while q:
+    #             x = q.pop()
+    #         print("iter_deque done")
+    #
+    #     g = timeit(iter_generator, number=1)
+    #     q = timeit(iter_deque, number=1)
+    #
+    #     print(g, q, q/g)
 

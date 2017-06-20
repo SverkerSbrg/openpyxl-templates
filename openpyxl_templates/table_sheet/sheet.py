@@ -1,6 +1,9 @@
-from collections import Counter
-from itertools import chain
+from collections import Counter, namedtuple
+from collections import deque
+from enum import Enum
+from itertools import chain, zip_longest, repeat
 
+from clint import OrderedDict
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
@@ -38,6 +41,13 @@ class NoTableColumns(OpenpyxlTemplateException):
         )
 
 
+class TableSheetExceptionPolicy(Enum):
+    RaiseCellException = 1
+    RaiseRowException = 2
+    RaiseSheetException = 3
+    IgnoreRow = 4
+
+
 class TableSheet(TemplatedSheet):
     item_class = TableColumn
 
@@ -56,10 +66,20 @@ class TableSheet(TemplatedSheet):
     def __init__(self, sheetname=None, active=None):
         super().__init__(sheetname=sheetname, active=active)
 
-        self.columns = list(self._items.values())
+        self.columns = []
+        index = 1
+        for object_attribute, column in self._items.items():
+            if not column._object_attribute:
+                column._object_attribute = object_attribute
+            column.column_index = index
+            index += 1
 
-        for index, column in enumerate(self.columns):
-            column.column_index = index + 1  # Start as 1
+            self.columns.append(column)
+
+        self._row_class = namedtuple(
+            "%sRow" % self.__class__.__name__,
+            (column.object_attribute for column in self.columns)
+        )
 
         self._validate()
 
@@ -139,7 +159,7 @@ class TableSheet(TemplatedSheet):
         self._first_data_cell = None
         cells = None
         for obj in objects:
-            cells = tuple(column.create_cell(worksheet, obj) for column in self.columns)
+            cells = tuple(column.create_cell(worksheet, column.get_value_from_object(obj)) for column in self.columns)
             worksheet.append(cells)
 
             if not self._first_data_cell:
@@ -176,5 +196,24 @@ class TableSheet(TemplatedSheet):
             for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):
                 worksheet.column_dimensions[get_column_letter(i)].hidden = True
 
-    def read(self, exception_policy):
-        pass
+    def read(self, exception_policy=TableSheetExceptionPolicy.RaiseCellException, look_for_header=True):
+        header = not look_for_header
+
+        for row in self.worksheet:
+            if not header:
+                header = self._is_row_header(row)
+            else:
+                data = OrderedDict(
+                    (column.object_attribute, column.from_excel_with_blank_check(cell))
+                    for cell, column in zip(chain(row, repeat(None)), self.columns)
+                )
+                yield self.create_object(data)
+
+    def _is_row_header(self, row):
+        for cell, column in zip(chain(row, repeat(None)), self.columns):
+            if str(cell.value) != column.header:
+                return False
+        return True
+
+    def create_object(self, data):
+        return self._row_class(data.values())

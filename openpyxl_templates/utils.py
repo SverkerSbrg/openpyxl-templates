@@ -8,6 +8,7 @@ from openpyxl.utils import column_index_from_string
 
 MAX_COLUMN_INDEX = column_index_from_string("XFD")
 
+
 def _color(color):
     if len(color) == 6:
         color = "FF%s" % color
@@ -112,5 +113,4 @@ class OrderedType(type):
         if hasattr(obj, "__register_objects__"):
             obj.__register_objects__(obj, classdict)
         return obj
-
 
