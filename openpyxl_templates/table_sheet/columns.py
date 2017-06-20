@@ -149,3 +149,21 @@ class TableColumn:
 
 
 # class FormulaColumn(Column):
+
+
+class CharColumn(TableColumn):
+    def from_excel(self, cell):
+        value = str(cell.value)
+        return value
+
+    def to_excel(self, value):
+        if value is None:
+            return ""
+
+        return str(value)
+
+# class BooleanColumn(TableColumn):
+#     def __init__(self, true_value=True, false_value=False, **kwargs):
+#         super().__init__(**kwargs)
+#
+#         self.t

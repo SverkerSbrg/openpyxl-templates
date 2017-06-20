@@ -8,7 +8,8 @@ from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 
-from openpyxl_templates.exceptions import OpenpyxlTemplateException
+from openpyxl_templates.exceptions import OpenpyxlTemplateException, OpenpyxlTemplateCellException, CellExceptions, \
+    RowExceptions
 from openpyxl_templates.table_sheet.columns import TableColumn
 from openpyxl_templates.templated_sheet import TemplatedSheet
 from openpyxl_templates.utils import Typed, MAX_COLUMN_INDEX
@@ -197,23 +198,48 @@ class TableSheet(TemplatedSheet):
                 worksheet.column_dimensions[get_column_letter(i)].hidden = True
 
     def read(self, exception_policy=TableSheetExceptionPolicy.RaiseCellException, look_for_header=True):
-        header = not look_for_header
+        header_found = not look_for_header
 
-        for row in self.worksheet:
-            if not header:
-                header = self._is_row_header(row)
-            else:
-                data = OrderedDict(
-                    (column.object_attribute, column.from_excel_with_blank_check(cell))
-                    for cell, column in zip(chain(row, repeat(None)), self.columns)
-                )
-                yield self.create_object(data)
+        rows = self.worksheet.__iter__()
+        try:
+            while not header_found:
+                header_found = self._is_row_header(rows.__next__())
+
+            row_exceptions = []
+            while True:
+                try:
+                    yield self.create_object(self._data_from_row(rows.__next__(), exception_policy=exception_policy))
+                except CellExceptions as e:
+                    if exception_policy <= TableSheetExceptionPolicy.RaiseRowException:
+                        raise e
+                    else:
+                        row_exceptions.append(e)
+
+                if row_exceptions and exception_policy <= TableSheetExceptionPolicy.RaiseSheetException:
+                    raise RowExceptions(row_exceptions)
+        except StopIteration:
+            pass
 
     def _is_row_header(self, row):
         for cell, column in zip(chain(row, repeat(None)), self.columns):
             if str(cell.value) != column.header:
                 return False
         return True
+
+    def _data_from_row(self, row, exception_policy=TableSheetExceptionPolicy.RaiseCellException):
+        data = OrderedDict()
+        cell_exceptions = []
+        for cell, column in zip(chain(row, repeat(None)), self.columns):
+            try:
+                data[column.object_attribute] = column.from_excel_with_blank_check(cell)
+            except OpenpyxlTemplateCellException as e:
+                if exception_policy <= TableSheetExceptionPolicy.RaiseCellException:
+                    raise e
+                else:
+                    cell_exceptions.append(e)
+
+        if cell_exceptions:
+            raise CellExceptions(cell_exceptions)
 
     def create_object(self, data):
         return self._row_class(data.values())

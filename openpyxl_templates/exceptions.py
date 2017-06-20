@@ -94,7 +94,7 @@ class HeaderNotFound(OpenpyxlTemplateException):
                 sheetname,
                 ", ".join(headers)
             )
-         )
+        )
 
 
 class CellExceptions(OpenpyxlTemplateRowException):
@@ -104,3 +104,9 @@ class CellExceptions(OpenpyxlTemplateRowException):
             "Failed to read row due to cell errors: %s" %
             ", ".join("\n    %s: '%s'" % (e.coordinate, str(e)) for e in self.cell_exceptions)
         )
+
+
+class RowExceptions(OpenpyxlTemplateException):
+    def __init__(self, row_exceptions):
+        self.exceptions = row_exceptions
+        super().__init__()
