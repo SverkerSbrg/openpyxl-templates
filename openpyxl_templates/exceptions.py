@@ -106,6 +106,10 @@ class CellExceptions(OpenpyxlTemplateRowException):
         )
 
 
+class CellException(OpenpyxlTemplateException):
+    pass
+
+
 class RowExceptions(OpenpyxlTemplateException):
     def __init__(self, row_exceptions):
         self.exceptions = row_exceptions

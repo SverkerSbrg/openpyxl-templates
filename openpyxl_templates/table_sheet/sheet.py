@@ -1,9 +1,8 @@
 from collections import Counter, namedtuple
-from collections import deque
+from collections import OrderedDict
 from enum import Enum
-from itertools import chain, zip_longest, repeat
+from itertools import chain, repeat
 
-from clint import OrderedDict
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
@@ -57,6 +56,13 @@ class HeadersNotFound(TableSheetException):
         )
 
 
+class CannotHideOrGroupLastColumn(TableSheetException):
+    def __init__(self):
+        super().__init__(
+            "Hiding or grouping the last column when hiding all excessive columns is rendered poorly in excel."
+        )
+
+
 class TableSheetExceptionPolicy(Enum):
     RaiseCellException = 1
     RaiseRowException = 2
@@ -102,6 +108,7 @@ class TableSheet(TemplatedSheet):
     def _validate(self):
         self._check_atleast_one_column()
         self._check_unique_column_headers()
+        self._check_last_column_not_hidden_or_grouped_if_hide_excess_columns()
 
     def _check_atleast_one_column(self):
         if not self.columns:
@@ -110,6 +117,12 @@ class TableSheet(TemplatedSheet):
     def _check_unique_column_headers(self):
         if len(set(column.header for column in self.columns)) < len(self.columns):
             raise ColumnHeadersNotUnique(self.columns)
+
+    def _check_last_column_not_hidden_or_grouped_if_hide_excess_columns(self):
+        if self.hide_excess_columns:
+            last_column = self.columns[-1]
+            if last_column.hidden or last_column.group:
+                raise CannotHideOrGroupLastColumn()
 
     def write(self, title=None, description=None, objects=None):
         worksheet = self.worksheet
@@ -267,3 +280,6 @@ class TableSheet(TemplatedSheet):
     @property
     def headers(self):
         return (column.header for column in self.columns)
+
+    def __iter__(self):
+        return self.read()

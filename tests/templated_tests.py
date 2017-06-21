@@ -1,10 +1,9 @@
-from timeit import timeit
-from collections import OrderedDict
-from collections import deque
 from unittest import TestCase
 
-from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet
-from openpyxl_templates.table_sheet.sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns, HeadersNotFound
+from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet, CharColumn, StringToLong, \
+    BooleanColumn, UnableToParseBool
+from openpyxl_templates.table_sheet.sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns, HeadersNotFound, \
+    CannotHideOrGroupLastColumn
 from openpyxl_templates.templated_workbook import TemplatedWorkbook
 from openpyxl_templates.utils import OrderedType, class_property
 
@@ -72,6 +71,21 @@ class OrderedTypeTests(TestCase):
             self.assertEqual(result[index], getattr(Child2, attr))
 
 
+class FakeCell:
+    coordinate = "A1"
+
+    def __init__(self, value):
+        self.value = value
+
+    @classmethod
+    def create(cls, values):
+        return tuple(cls(value) for value in values)
+
+
+def FakeCells(*values):
+    return tuple(FakeCell(value) for value in values)
+
+
 class TestColumn(TableColumn):
     _header = "Test"
 
@@ -104,17 +118,72 @@ class TableColumnTests(TestCase):
             )
 
 
-class FakeCell:
-    def __init__(self, value):
-        self.value = value
+class CharColumnTests(TestCase):
+    def setUp(self):
+        self.column = CharColumn()
 
-    @classmethod
-    def create(cls, values):
-        return tuple(cls(value) for value in values)
+    def test_to_excel(self):
+        for excel, internal in (
+                ("", None),
+                ("1", 1),
+                ("1.0", 1.0),
+                ("String", "String"),
+                ("", "")
+        ):
+            self.assertEqual(self.column.to_excel(internal), excel)
+
+    def test_from_excel(self):
+        for excel, internal in (
+                (None, None),
+                (1, "1"),
+                (1.0, "1.0"),
+                ("String", "String"),
+                ("", "")
+        ):
+            self.assertEqual(self.column.from_excel(FakeCell(excel)), internal)
+
+    def test_string_to_long(self):
+        column = CharColumn(max_length=5)
+        column.from_excel(FakeCell("12345"))
+
+        with self.assertRaises(StringToLong):
+            column.from_excel(FakeCell("123456"))
 
 
-def FakeCells(*values):
-    return tuple(FakeCell(value) for value in values)
+class BooleanColumnTests(TestCase):
+    def setUp(self):
+        self.column = BooleanColumn()
+
+    def test_to_excel(self):
+        for excel, internal in (
+                ("TRUE", True),
+                ("FALSE", False),
+                ("FALSE", None),
+                ("FALSE", ""),
+                ("TRUE", "string")
+        ):
+            self.assertEqual(self.column.to_excel(internal), excel)
+
+    def test_from_excel(self):
+        for excel, internal in (
+                ("TRUE", True),
+                ("FALSE", False),
+                (1, True),
+                (0, False),
+                ("x", True),
+                ("", False)
+        ):
+            self.assertEqual(self.column.from_excel(FakeCell(excel)), internal)
+
+    def test_strict(self):
+        column = BooleanColumn(strict=True)
+
+        for valid in ("TRUE", "FALSE", True, False):
+            column.from_excel(FakeCell(valid))
+
+        for invalid in (None, "string", "", 0, 1, 0.1):
+            with self.assertRaises(UnableToParseBool):
+                column.from_excel(FakeCell(invalid))
 
 
 class FakeTableSheet(TableSheet):
@@ -170,6 +239,21 @@ class TemplatedSheetTestCase(TestCase):
 
         with self.assertRaises(NoTableColumns):
             ws = NoColumnsTableSheet(sheetname="no_columns")
+
+    def test_cannot_hide_or_group_last_column(self):
+        class CannotHideLastColumnSheet(TableSheet):
+            column1 = TableColumn()
+            column2 = TableColumn(hidden=True)
+
+        class CannotGroupLastColumnSheet(TableSheet):
+            column1 = TableColumn()
+            column2 = TableColumn(hidden=True)
+
+        with self.assertRaises(CannotHideOrGroupLastColumn):
+            CannotHideLastColumnSheet(sheetname="CannotHideOrGroupLastColumnSheet")
+
+        with self.assertRaises(CannotHideOrGroupLastColumn):
+            CannotGroupLastColumnSheet(sheetname="CannotGroupLastColumnSheet")
 
     def test_read(self):
         obj = self.sheet.object_from_row(FakeCells("1", "2", "3"))
@@ -251,30 +335,3 @@ class TemplatedWorkbookTests(TestCase):
 
         self.assertEqual(0, self.wb.sheet1.sheet_index)
         self.assertEqual(1, self.wb.sheet2.sheet_index)
-
-        # def test_timeit(self):
-        #
-        #     def gen():
-        #         print("gen starting")
-        #         for i in range(1, 1000):
-        #             yield i
-        #         print("gen done")
-        #
-        #     def iter_generator():
-        #         g = gen()
-        #         print("iter_gen created")
-        #         for i in g:
-        #             x = i
-        #         print("iter_gen done")
-        #
-        #     def iter_deque():
-        #         q = deque(gen())
-        #         print("iter_deque created")
-        #         while q:
-        #             x = q.pop()
-        #         print("iter_deque done")
-        #
-        #     g = timeit(iter_generator, number=1)
-        #     q = timeit(iter_deque, number=1)
-        #
-        #     print(g, q, q/g)

@@ -9,7 +9,7 @@ from openpyxl_templates.old.columns import ChoiceColumn, CharColumn, DateColumn,
 from openpyxl_templates.old.workbook import WorkbookTemplate
 from openpyxl_templates.old.worksheet import SheetTemplate
 from openpyxl_templates.style import DefaultStyleSet, _Colors
-from openpyxl_templates.table_sheet.columns import TableColumn
+from openpyxl_templates.table_sheet.columns import TableColumn, ChoiceColumn as NewChoiceColumn, DateColumn as NewDateColumn
 from openpyxl_templates.table_sheet.sheet import TableSheet
 from openpyxl_templates.templated_workbook import TemplatedWorkbook
 
@@ -159,9 +159,21 @@ class DemoTemplate(WorkbookTemplate):
     active_sheet = "Elements"
 
 
+class SexColumn2(NewChoiceColumn):
+    hidden = False
+    choices = (
+        ("Male", Sexes.MALE),
+        ("Female", Sexes.FEMALE),
+        ("Other", Sexes.OTHER)
+    )
+    add_list_validation = True
+
+
 class TemplatedPersonsSheet(TableSheet):
-    first_name = TableColumn(object_attr="first_name", header="First name", width=15)
-    last_name = TableColumn(object_attr="last_name", header="Last name", width=15)
+    first_name = TableColumn(header="First name", width=15)
+    last_name = TableColumn(header="Last name", width=15)
+    sex = SexColumn2(header="Sex")
+    date_of_birth = NewDateColumn(header="Date of birth")
 
     hide_excess_columns = False
 

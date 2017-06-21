@@ -321,8 +321,10 @@ class TimeColumn(DateTimeColumn):
         if _type == time:
             return value
 
-        if _type == datetime:
+        if _type   == datetime:
             return value.time()
 
         if _type == date:
             return time.min
+
+

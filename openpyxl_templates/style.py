@@ -289,6 +289,10 @@ class StyleSet2:
 
         self._styles[style.name] = style
 
+    @property
+    def names(self):
+        return tuple(style.name for style in self._styles.values())
+
 
 class DefaultStyleSet(StyleSet2):
     def __init__(self, accent_color=_Colors.DARK_BLUE):
@@ -299,7 +303,6 @@ class DefaultStyleSet(StyleSet2):
             ExtendedStyle(
                 base="Default",
                 name="Empty",
-                # border=ColoredBorders("FFFFFFFF")
             ),
             ExtendedStyle(
                 base="Empty",
