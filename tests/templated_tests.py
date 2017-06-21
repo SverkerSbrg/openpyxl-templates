@@ -4,7 +4,7 @@ from collections import deque
 from unittest import TestCase
 
 from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet
-from openpyxl_templates.table_sheet.sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns
+from openpyxl_templates.table_sheet.sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns, HeadersNotFound
 from openpyxl_templates.templated_workbook import TemplatedWorkbook
 from openpyxl_templates.utils import OrderedType, class_property
 
@@ -104,6 +104,37 @@ class TableColumnTests(TestCase):
             )
 
 
+class FakeCell:
+    def __init__(self, value):
+        self.value = value
+
+    @classmethod
+    def create(cls, values):
+        return tuple(cls(value) for value in values)
+
+
+def FakeCells(*values):
+    return tuple(FakeCell(value) for value in values)
+
+
+class FakeTableSheet(TableSheet):
+    column1 = TestColumn(header="column1")
+    column2 = TestColumn(header="column2")
+    column3 = TestColumn(header="column3")
+
+    def __init__(self, *rows):
+        self.fake_worksheet = (FakeCells(*row) for row in rows)
+
+        super().__init__(sheetname="fakesheet")
+
+    @property
+    def worksheet(self):
+        return self.fake_worksheet
+
+    def read(self, *args, **kwargs):
+        return tuple(super().read(*args, **kwargs))
+
+
 class TestTemplatedSheet(TableSheet):
     column1 = TestColumn(header="column1")
     column2 = TestColumn(header="column2")
@@ -140,7 +171,45 @@ class TemplatedSheetTestCase(TestCase):
         with self.assertRaises(NoTableColumns):
             ws = NoColumnsTableSheet(sheetname="no_columns")
 
+    def test_read(self):
+        obj = self.sheet.object_from_row(FakeCells("1", "2", "3"))
+        self.assertEqual(obj.column1, "1")
+        self.assertEqual(obj.column2, "2")
+        self.assertEqual(obj.column3, "3")
 
+    def test_find_headers_and_read(self):
+        sheet = FakeTableSheet(
+            ("column1", "column2", "column3"),
+            ("1", "2", "3"),
+        )
+
+        objects = tuple(sheet.read())
+        self.assertEqual(len(objects), 1)
+
+    def test_headers_not_found(self):
+        row_sets = (
+            (
+                ("1", "2", "3"),
+                ("1", "2", "3"),
+            ),
+            (
+                ("column1", "column2"),
+                ("1", "2", "3"),
+            )
+        )
+
+        for rows in row_sets:
+            with self.assertRaises(HeadersNotFound):
+                sheet = FakeTableSheet(rows)
+                sheet.read()
+
+    def test_no_rows(self):
+        sheet = FakeTableSheet(
+            (
+                ("column1", "column2", "column3")
+            ),
+        )
+        self.assertFalse(sheet.read())
 
 
 class TestTemplatedWorkbook(TemplatedWorkbook):
@@ -183,30 +252,29 @@ class TemplatedWorkbookTests(TestCase):
         self.assertEqual(0, self.wb.sheet1.sheet_index)
         self.assertEqual(1, self.wb.sheet2.sheet_index)
 
-    # def test_timeit(self):
-    #
-    #     def gen():
-    #         print("gen starting")
-    #         for i in range(1, 1000):
-    #             yield i
-    #         print("gen done")
-    #
-    #     def iter_generator():
-    #         g = gen()
-    #         print("iter_gen created")
-    #         for i in g:
-    #             x = i
-    #         print("iter_gen done")
-    #
-    #     def iter_deque():
-    #         q = deque(gen())
-    #         print("iter_deque created")
-    #         while q:
-    #             x = q.pop()
-    #         print("iter_deque done")
-    #
-    #     g = timeit(iter_generator, number=1)
-    #     q = timeit(iter_deque, number=1)
-    #
-    #     print(g, q, q/g)
-
+        # def test_timeit(self):
+        #
+        #     def gen():
+        #         print("gen starting")
+        #         for i in range(1, 1000):
+        #             yield i
+        #         print("gen done")
+        #
+        #     def iter_generator():
+        #         g = gen()
+        #         print("iter_gen created")
+        #         for i in g:
+        #             x = i
+        #         print("iter_gen done")
+        #
+        #     def iter_deque():
+        #         q = deque(gen())
+        #         print("iter_deque created")
+        #         while q:
+        #             x = q.pop()
+        #         print("iter_deque done")
+        #
+        #     g = timeit(iter_generator, number=1)
+        #     q = timeit(iter_deque, number=1)
+        #
+        #     print(g, q, q/g)

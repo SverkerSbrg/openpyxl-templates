@@ -110,3 +110,8 @@ class RowExceptions(OpenpyxlTemplateException):
     def __init__(self, row_exceptions):
         self.exceptions = row_exceptions
         super().__init__()
+
+
+class SheetException(OpenpyxlTemplateException):
+    pass
+

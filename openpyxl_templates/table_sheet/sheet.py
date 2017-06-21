@@ -8,14 +8,18 @@ from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 
-from openpyxl_templates.exceptions import OpenpyxlTemplateException, OpenpyxlTemplateCellException, CellExceptions, \
-    RowExceptions
+from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions, \
+    RowExceptions, SheetException
 from openpyxl_templates.table_sheet.columns import TableColumn
 from openpyxl_templates.templated_sheet import TemplatedSheet
 from openpyxl_templates.utils import Typed, MAX_COLUMN_INDEX
 
 
-class ColumnHeadersNotUnique(OpenpyxlTemplateException):
+class TableSheetException(SheetException):
+    pass
+
+
+class ColumnHeadersNotUnique(TableSheetException):
     def __init__(self, columns):
         counter = Counter(column.header for column in columns)
         super().__init__("headers '%s' has been declared more then once in the same TableSheet" % tuple(
@@ -26,7 +30,7 @@ class ColumnHeadersNotUnique(OpenpyxlTemplateException):
         ))
 
 
-class TempleteStyleNotFound(OpenpyxlTemplateException):
+class TempleteStyleNotFound(TableSheetException):
     def __init__(self, missing_style_name, style_set):
         super().__init__(
             "The style '%s' has not been declared. Avaliable styles are: %s)"
@@ -34,11 +38,22 @@ class TempleteStyleNotFound(OpenpyxlTemplateException):
         )
 
 
-class NoTableColumns(OpenpyxlTemplateException):
+class NoTableColumns(TableSheetException):
     def __init__(self, table_sheet):
         super().__init__(
             "The TableSheet '%s' has no columns. Declare atleast one."
             % table_sheet.sheetname
+        )
+
+
+class HeadersNotFound(TableSheetException):
+    def __init__(self, table_sheet):
+        super().__init__(
+            "Header column not found on sheet '%s' either make sure that the following headers are "
+            "present '%s'." % (
+                table_sheet.sheetname,
+                ", ".join(table_sheet.headers)
+            )
         )
 
 
@@ -208,7 +223,7 @@ class TableSheet(TemplatedSheet):
             row_exceptions = []
             while True:
                 try:
-                    yield self.create_object(self._data_from_row(rows.__next__(), exception_policy=exception_policy))
+                    yield self.object_from_row(rows.__next__(), exception_policy=exception_policy)
                 except CellExceptions as e:
                     if exception_policy <= TableSheetExceptionPolicy.RaiseRowException:
                         raise e
@@ -220,13 +235,16 @@ class TableSheet(TemplatedSheet):
         except StopIteration:
             pass
 
+        if not header_found:
+            raise HeadersNotFound(self)
+
     def _is_row_header(self, row):
-        for cell, column in zip(chain(row, repeat(None)), self.columns):
-            if str(cell.value) != column.header:
+        for cell, header in zip(chain(row, repeat(None)), self.headers):
+            if str(cell.value) != header:
                 return False
         return True
 
-    def _data_from_row(self, row, exception_policy=TableSheetExceptionPolicy.RaiseCellException):
+    def object_from_row(self, row, exception_policy=TableSheetExceptionPolicy.RaiseCellException):
         data = OrderedDict()
         cell_exceptions = []
         for cell, column in zip(chain(row, repeat(None)), self.columns):
@@ -241,5 +259,11 @@ class TableSheet(TemplatedSheet):
         if cell_exceptions:
             raise CellExceptions(cell_exceptions)
 
+        return self.create_object(data)
+
     def create_object(self, data):
-        return self._row_class(data.values())
+        return self._row_class(*data.values())
+
+    @property
+    def headers(self):
+        return (column.header for column in self.columns)
