@@ -6,7 +6,7 @@ from openpyxl_templates.style import DefaultStyleSet, StyleSet2
 from openpyxl_templates.templated_sheet import TemplatedSheet
 from openpyxl_templates.utils import OrderedType, Typed
 
-
+# TODO: Add automated sheetname from declaring attribute
 class TemplatedWorkbook(Workbook, metaclass=OrderedType):
     item_class = TemplatedSheet
 

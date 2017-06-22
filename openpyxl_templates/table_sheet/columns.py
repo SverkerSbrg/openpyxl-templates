@@ -5,7 +5,7 @@ from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
-from openpyxl_templates.exceptions import OpenpyxlTemplateException, BlankNotAllowed, CellException
+from openpyxl_templates.exceptions import OpenpyxlTemplateException, CellException
 from openpyxl_templates.utils import Typed
 
 
@@ -23,7 +23,13 @@ class ObjectAttributeNotSet(OpenpyxlTemplateException):
             "The attributed must be assigned explicitly if added after class declaration" % column
         )
 
+
 DEFAULT_COLUMN_WIDTH = 8.43
+
+
+class BlankNotAllowed(CellException):
+    def __init__(self, cell):
+        super().__init__("The cell '%s' is not allowed to be empty." % cell.coordinate)
 
 
 class TableColumn:
@@ -155,6 +161,7 @@ class StringToLong(CellException):
         )
 
 
+# TODO: Add ability to force text, Eg. append and strip "'"
 class CharColumn(TableColumn):
     max_length = Typed("max_length", expected_type=int, allow_none=True)
 
@@ -308,7 +315,7 @@ class IllegalChoice(CellException):
 
 
 class ChoiceColumn(TableColumn):
-    choices = None  #((internal_value, excel_value),)
+    choices = None  # ((internal_value, excel_value),)
     list_validation = True
 
     to_excel_map = None

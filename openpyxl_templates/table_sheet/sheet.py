@@ -7,8 +7,7 @@ from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 
-from openpyxl_templates.exceptions import OpenpyxlTemplateCellException, CellExceptions, \
-    RowExceptions, SheetException
+from openpyxl_templates.exceptions import CellExceptions, RowExceptions, SheetException, CellException
 from openpyxl_templates.table_sheet.columns import TableColumn
 from openpyxl_templates.templated_sheet import TemplatedSheet
 from openpyxl_templates.utils import Typed, MAX_COLUMN_INDEX
@@ -263,7 +262,7 @@ class TableSheet(TemplatedSheet):
         for cell, column in zip(chain(row, repeat(None)), self.columns):
             try:
                 data[column.object_attribute] = column.from_excel_with_blank_check(cell)
-            except OpenpyxlTemplateCellException as e:
+            except CellException as e:
                 if exception_policy <= TableSheetExceptionPolicy.RaiseCellException:
                     raise e
                 else:

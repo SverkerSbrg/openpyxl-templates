@@ -13,6 +13,9 @@ class MagicString(str):
     pass
 
 
+# TODO: split testcases to different files
+# TODO: Test all columns
+# TODO: Test StyleSet2
 class OrderedTypeTestClass(metaclass=OrderedType):
     item_class = MagicString
 
