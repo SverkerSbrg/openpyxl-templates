@@ -2,7 +2,7 @@ from datetime import datetime
 
 from openpyxl import Workbook, load_workbook
 
-from openpyxl_templates.style import DefaultStyleSet, StyleSet2
+from openpyxl_templates.style import DefaultStyleSet, StyleSet
 from openpyxl_templates.templated_sheet import TemplatedSheet
 from openpyxl_templates.utils import OrderedType, Typed
 
@@ -11,7 +11,7 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
     item_class = TemplatedSheet
 
     templated_sheets = None
-    template_styles = Typed("template_styles", expected_type=StyleSet2)
+    template_styles = Typed("template_styles", expected_type=StyleSet)
 
     timestamp = Typed("timestamp", expected_types=(str, bool), value=False)
     _default_timestamp = "%Y%m%d_%H%M%S"

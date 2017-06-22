@@ -52,7 +52,7 @@ class ExtendedStyle(dict):
         return object_class(**kwargs)
 
 
-class StyleSet2:
+class StyleSet:
     _styles = None
 
     def __init__(self, *styles):
@@ -84,7 +84,7 @@ class StyleSet2:
         return tuple(style.name for style in self._styles.values())
 
 
-class DefaultStyleSet(StyleSet2):
+class DefaultStyleSet(StyleSet):
     def __init__(self, accent_color=_Colors.DARK_BLUE):
         super().__init__(
             NamedStyle(
