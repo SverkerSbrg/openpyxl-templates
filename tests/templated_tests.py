@@ -1,3 +1,4 @@
+from timeit import timeit
 from unittest import TestCase
 
 from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet, CharColumn, StringToLong, \

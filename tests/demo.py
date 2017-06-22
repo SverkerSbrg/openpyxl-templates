@@ -179,12 +179,15 @@ class TemplatedPersonsSheet(TableSheet):
 
 
 class DemoTemplatedWorkbook(TemplatedWorkbook):
+    timestamp = True
+
     persons = TemplatedPersonsSheet(sheetname="Persons", active=True)
 
 
 if __name__ == "__main__":
     workbook = DemoTemplatedWorkbook(template_styles=DefaultStyleSet(accent_color=_Colors.DARK_RED))
     workbook.persons.write(objects=persons, title="Persons")
+
     workbook.save("demo.xlsx")
     # workbook = Workbook()
     # template = DemoTemplate(workbook)

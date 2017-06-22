@@ -33,7 +33,7 @@ class TableColumn:
 
     # Rendering properties
     _header = Typed("header", expected_type=str, allow_none=True)
-    width = Typed("width", expected_types=(int, float), value=8.43)
+    width = Typed("width", expected_types=(int, float), value=DEFAULT_COLUMN_WIDTH * 2)
     hidden = Typed("hidden", expected_type=bool, value=False)
     group = Typed("group", expected_type=bool, value=False)
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
