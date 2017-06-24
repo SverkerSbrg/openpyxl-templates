@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet, BooleanColumn, StringToLong, \
+from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet, BoolColumn, StringToLong, \
     CharColumn, UnableToParseBool
 from tests.utils import FakeCell
 
@@ -68,7 +68,7 @@ class CharColumnTests(TestCase):
 
 class BooleanColumnTests(TestCase):
     def setUp(self):
-        self.column = BooleanColumn()
+        self.column = BoolColumn()
 
     def test_to_excel(self):
         for excel, internal in (
@@ -92,7 +92,7 @@ class BooleanColumnTests(TestCase):
             self.assertEqual(self.column.from_excel(FakeCell(excel)), internal)
 
     def test_strict(self):
-        column = BooleanColumn(strict=True)
+        column = BoolColumn(strict=True)
 
         for valid in ("TRUE", "FALSE", True, False):
             column.from_excel(FakeCell(valid))

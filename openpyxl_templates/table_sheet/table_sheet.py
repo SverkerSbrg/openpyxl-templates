@@ -1,3 +1,4 @@
+import re
 from collections import Counter, namedtuple
 from collections import OrderedDict
 from enum import Enum
@@ -72,6 +73,8 @@ class TableSheetExceptionPolicy(Enum):
 class TableSheet(TemplatedSheet):
     item_class = TableColumn
 
+    table_name = Typed("table_name", expected_type=str, allow_none=True)
+
     title_style = Typed("title_style", expected_type=str, value="Title")
     description_style = Typed("description_style", expected_type=str, value="Description")
 
@@ -84,8 +87,10 @@ class TableSheet(TemplatedSheet):
     _first_header_cell = None
     _last_header_cell = None
 
-    def __init__(self, sheetname=None, active=None):
+    def __init__(self, sheetname=None, active=None, table_name=None):
         super().__init__(sheetname=sheetname, active=active)
+
+        self.table_name = table_name or self.table_name
 
         self.columns = []
         index = 1
@@ -123,9 +128,13 @@ class TableSheet(TemplatedSheet):
             if last_column.hidden or last_column.group:
                 raise CannotHideOrGroupLastColumn()
 
-    def write(self, title=None, description=None, objects=None):
-        worksheet = self.worksheet
+    def write(self, objects=None, title=None, description=None, preserve=False):
+        if not self.empty:
+            if preserve:
+                objects = chain(list(self.read()), objects)
+            self.remove()
 
+        worksheet = self.worksheet
         self.prepare_worksheet(worksheet)
         self.write_title(worksheet, title)
         self.write_description(worksheet, description)
@@ -203,9 +212,6 @@ class TableSheet(TemplatedSheet):
         for column in self.columns:
             column.post_process_worksheet(worksheet)
 
-        if self.active:
-            self.activate()
-
         if self.format_as_table:
             worksheet.add_table(
                 Table(
@@ -213,7 +219,7 @@ class TableSheet(TemplatedSheet):
                         self._first_header_cell.coordinate,
                         self._last_data_cell.coordinate if self._last_data_cell else self._last_header_cell.coordinate
                     ),
-                    displayName=self.sheetname,
+                    displayName=self.table_name or self.generate_table_name(),
                 )
             )
 
@@ -276,9 +282,18 @@ class TableSheet(TemplatedSheet):
     def create_object(self, data):
         return self._row_class(*data.values())
 
+    def generate_table_name(self):
+        table_name = self.sheetname
+        # Remove invalid characters
+        table_name = re.sub('[^0-9a-zA-Z_]', '', table_name)
+        # Remove leading characters until we find a letter or underscore
+        table_name = re.sub('^[^a-zA-Z_]+', '', table_name)
+        return table_name
+
     @property
     def headers(self):
         return (column.header for column in self.columns)
 
     def __iter__(self):
         return self.read()
+

@@ -1,8 +1,9 @@
 from unittest import TestCase
 
 from openpyxl_templates.table_sheet.columns import TableColumn
-from openpyxl_templates.table_sheet.sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns, \
+from openpyxl_templates.table_sheet.table_sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns, \
     CannotHideOrGroupLastColumn, HeadersNotFound
+from openpyxl_templates.templated_workbook import TemplatedWorkbook
 from tests.utils import FakeCells
 
 
@@ -10,6 +11,9 @@ class TestTemplatedSheet(TableSheet):
     column1 = TableColumn(header="column1")
     column2 = TableColumn(header="column2")
     column3 = TableColumn(header="column3")
+
+class TestTemplatedWorkbook(TemplatedWorkbook):
+    sheet1 = TestTemplatedSheet()
 
 
 class FakeTableSheet(TableSheet):
@@ -114,3 +118,56 @@ class TemplatedSheetTestCase(TestCase):
             ),
         )
         self.assertFalse(sheet.read())
+
+    def test_write_tuple(self):
+        data = (
+            ("Col2Row1", "Col2Row1", "Col3Row1"),
+            ("Col2Row2", "Col2Row2", "Col3Row2"),
+            ("Col2Row3", "Col2Row3", "Col3Row3")
+        )
+
+        wb = TestTemplatedWorkbook()
+
+        wb.sheet1.write(objects=data)
+        result = tuple(tuple(row) for row in wb.sheet1.read())
+
+        self.assertEqual(data, result)
+
+    def test_remove(self):
+        wb = TestTemplatedWorkbook()
+        self.assertTrue(wb.sheet1.empty)
+        wb.sheet1.write(((1, 2, 3),))
+        self.assertFalse(wb.sheet1.empty)
+        wb.sheet1.remove()
+        self.assertTrue(wb.sheet1.empty)
+
+    def test_preserve(self):
+        wb = TestTemplatedWorkbook()
+        data = (
+            ("Col1Row1", "Col2Row1", "Col3Row1"),
+            ("Col1Row2", "Col2Row2", "Col3Row2"),
+            ("Col1Row3", "Col2Row3", "Col3Row3")
+        )
+
+        wb.sheet1.write(data[0:1])
+        wb.sheet1.write(data[1:], preserve=True)
+
+        result = tuple(tuple(row) for row in wb.sheet1.read())
+        self.assertEqual(data, result)
+
+    def test_do_not_preserve(self):
+        wb = TestTemplatedWorkbook()
+        data = (
+            ("Col1Row1", "Col2Row1", "Col3Row1"),
+            ("Col1Row2", "Col2Row2", "Col3Row2"),
+            ("Col1Row3", "Col2Row3", "Col3Row3")
+        )
+
+        wb.sheet1.write(data[0:1])
+        wb.sheet1.write(data[1:], preserve=False)
+
+        result = tuple(tuple(row) for row in wb.sheet1.read())
+        self.assertEqual(data[1:], result)
+
+
+

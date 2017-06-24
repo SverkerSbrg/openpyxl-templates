@@ -1,10 +1,8 @@
-from collections import OrderedDict
 from itertools import chain
 
-from openpyxl.drawing.text import Font
 from openpyxl.styles import NamedStyle
 
-from openpyxl_templates.utils import SolidFill, Typed, ColoredBorders, OrderedType
+from openpyxl_templates.utils import SolidFill
 
 
 class _Colors:

@@ -17,20 +17,32 @@ class WorksheetDoesNotExist(OpenpyxlTemplateException):
         )
 
 
+class SheetnameNotSet(OpenpyxlTemplateException):
+    def __init__(self):
+        super().__init__("Sheetname not specified. This should be done automatically by the TemplatedWorkbook.")
+
+
 class TemplatedSheet(metaclass=OrderedType):
-    sheetname = Typed("sheetname", expected_type=str)
+    _sheetname = Typed("_sheetname", expected_type=str, allow_none=True)
     active = Typed("active", expected_type=bool, value=False)
     _workbook = None
 
     # order = ... # TODO: Add ordering to sheets either through declaration on workbook or here
 
     def __init__(self, sheetname=None, active=None):
-        self.sheetname = sheetname or self.sheetname
+        self._sheetname = sheetname or self._sheetname
         self.active = active if active is not None else self.active
 
     @property
     def exists(self):
         return self.sheetname in self.workbook
+
+    @property
+    def empty(self):
+        if not self.exists:
+            return True
+
+        return not bool(len(self.worksheet._cells))
 
     @property
     def worksheet(self):
@@ -67,5 +79,17 @@ class TemplatedSheet(metaclass=OrderedType):
         if self.exists:
             del self.workbook[self.sheetname]
 
-    def activate(self):
-        self.workbook.active = self.sheet_index
+    # def activate(self):
+    #     self.workbook.active = self.sheet_index
+
+    @property
+    def sheetname(self):
+        if not self._sheetname:
+            raise SheetnameNotSet()
+        return self._sheetname
+
+    @sheetname.setter
+    def sheetname(self, value):
+        self._sheetname = value
+
+

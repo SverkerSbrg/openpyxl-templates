@@ -1,12 +1,12 @@
 from unittest import TestCase
 
-from openpyxl_templates.templated_workbook import TemplatedWorkbook
+from openpyxl_templates.templated_workbook import TemplatedWorkbook, SheetnamesNotUnique, MultipleActiveSheets
 from tests.test_table_sheet.test_table_sheet import TestTemplatedSheet
 
 
 class TestTemplatedWorkbook(TemplatedWorkbook):
-    sheet1 = TestTemplatedSheet(sheetname="Test")
-    sheet2 = TestTemplatedSheet(sheetname="Test2")
+    sheet1 = TestTemplatedSheet(sheetname="Custom sheetname")
+    sheet2 = TestTemplatedSheet()
 
 
 class TemplatedWorkbookTests(TestCase):
@@ -39,3 +39,53 @@ class TemplatedWorkbookTests(TestCase):
 
         self.assertEqual(0, self.wb.sheet1.sheet_index)
         self.assertEqual(1, self.wb.sheet2.sheet_index)
+
+    def test_sheetname_from_workbook_attribute(self):
+        self.assertEqual(self.wb.sheet1.sheetname, "Custom sheetname")
+        self.assertEqual(self.wb.sheet2.sheetname, "sheet2")
+
+    def test_sheetnames_not_unique(self):
+        class SheetnamesNotUniqueWorkbook(TemplatedWorkbook):
+            sheet1 = TestTemplatedSheet(sheetname="Test")
+            sheet2 = TestTemplatedSheet(sheetname="Test")
+
+        with self.assertRaises(SheetnamesNotUnique):
+            SheetnamesNotUniqueWorkbook()
+
+    def test_sort(self):
+        class TestTemplatedWorkbook(TemplatedWorkbook):
+            sheet1 = TestTemplatedSheet()
+            sheet2 = TestTemplatedSheet()
+
+        wb = TestTemplatedWorkbook()
+
+        wb.remove_all_sheets()
+
+        wb.create_sheet("ordinary_sheet1")
+        wb.create_sheet("ordinary_sheet2")
+
+        ws = wb.sheet2.worksheet
+        ws = wb.sheet1.worksheet
+
+        self.assertEqual(
+            tuple(wb.sheetnames),
+            ("ordinary_sheet1", "ordinary_sheet2", "sheet2", "sheet1")
+        )
+        wb.sort_worksheets()
+        self.assertEqual(
+            tuple(wb.sheetnames),
+            ("sheet1", "sheet2", "ordinary_sheet1", "ordinary_sheet2")
+        )
+
+    def test_multiple_active(self):
+        class MultipleActiveWorkbook(TemplatedWorkbook):
+            sheet1 = TestTemplatedSheet(active=True)
+            sheet2 = TestTemplatedSheet(active=True)
+
+        with self.assertRaises(MultipleActiveSheets):
+            MultipleActiveWorkbook()
+
+    # def test_asdf(self):
+    #     self.wb.create_sheet("asdf")
+    #     ws = self.wb["asdf"]
+    #     x = self.wb["asdf"].__iter__()

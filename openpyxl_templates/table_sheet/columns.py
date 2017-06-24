@@ -67,15 +67,9 @@ class TableColumn:
         self._object_attribute = object_attribute if object_attribute is not None else self._object_attribute
         self.source = source if source is not None else self.source
 
-    # def get_value(self, obj):
-    #     return self.getter(obj)
-    #
-    # def set_value(self, obj, value):
-    #     self.setter(obj, value)
-
     def get_value_from_object(self, object):
         if isinstance(object, (list, tuple)):
-            return object[self.column_index]
+            return object[self.column_index-1]
 
         if isinstance(object, dict):
             return object[self.object_attribute]
@@ -130,7 +124,7 @@ class TableColumn:
 
     @property
     def header(self):
-        return self._header or "Column%d" % self.column_index
+        return self._header or self._object_attribute or "Column%d" % self.column_index
 
     @property
     def column_index(self):
@@ -206,7 +200,7 @@ class UnableToParseBool(UnableToParseException):
     type = "boolean"
 
 
-class BooleanColumn(TableColumn):
+class BoolColumn(TableColumn):
     excel_true = "TRUE"
     excel_false = "FALSE"
 
@@ -350,7 +344,7 @@ class UnableToParseDatetime(UnableToParseException):
     type = "datetime"
 
 
-class DateTimeColumn(TableColumn):
+class DatetimeColumn(TableColumn):
     SECONDS_PER_DAY = 24 * 60 * 60
 
     row_style = "Row, date"
@@ -379,7 +373,7 @@ class UnableToParseDate(UnableToParseException):
     type = "Row, date"
 
 
-class DateColumn(DateTimeColumn):
+class DateColumn(DatetimeColumn):
     def from_excel(self, cell):
         try:
             return super().from_excel(cell).date()
@@ -394,7 +388,7 @@ class UnableToParseTime(UnableToParseException):
     type = "time"
 
 
-class TimeColumn(DateTimeColumn):
+class TimeColumn(DatetimeColumn):
     row_style = "Row, time"
 
     def from_excel(self, cell):
