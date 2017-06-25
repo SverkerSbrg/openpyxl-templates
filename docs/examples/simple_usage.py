@@ -24,6 +24,9 @@ class PersonSheet(TableSheet):
 class PersonsWorkbook(TemplatedWorkbook):
     persons = PersonSheet()
 
+
+# --------------- Write ---------------
+
 wb = PersonsWorkbook()
 wb.persons.write(
     title="List of fruit lovers",
@@ -34,3 +37,10 @@ wb.persons.write(
 )
 
 wb.save("fruit_lovers.xlsx")
+
+# --------------- Read ---------------
+
+wb = PersonsWorkbook("fruit_lovers.xlsx")
+
+for person in wb.persons:
+    print(person.first_name, person.last_name, person.favorite_fruit)
