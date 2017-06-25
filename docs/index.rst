@@ -23,9 +23,8 @@
    :maxdepth: 2
    :caption: TableSheet
 
-   table_sheet
-   columns
-   custom_columns
+   table_sheet/table_sheet
+   table_sheet/table_columns
 
 
 Indices and tables
