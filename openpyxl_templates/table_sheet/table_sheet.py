@@ -10,7 +10,7 @@ from openpyxl.worksheet.table import Table
 
 from openpyxl_templates.exceptions import CellExceptions, RowExceptions, SheetException, CellException
 from openpyxl_templates.table_sheet.columns import TableColumn
-from openpyxl_templates.templated_sheet import TemplatedSheet
+from openpyxl_templates.templated_sheet import TemplatedWorksheet
 from openpyxl_templates.utils import Typed, MAX_COLUMN_INDEX
 
 
@@ -70,7 +70,7 @@ class TableSheetExceptionPolicy(Enum):
     IgnoreRow = 4
 
 
-class TableSheet(TemplatedSheet):
+class TableSheet(TemplatedWorksheet):
     item_class = TableColumn
 
     table_name = Typed("table_name", expected_type=str, allow_none=True)

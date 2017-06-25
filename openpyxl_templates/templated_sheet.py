@@ -22,7 +22,7 @@ class SheetnameNotSet(OpenpyxlTemplateException):
         super().__init__("Sheetname not specified. This should be done automatically by the TemplatedWorkbook.")
 
 
-class TemplatedSheet(metaclass=OrderedType):
+class TemplatedWorksheet(metaclass=OrderedType):
     _sheetname = Typed("_sheetname", expected_type=str, allow_none=True)
     active = Typed("active", expected_type=bool, value=False)
     _workbook = None

@@ -4,7 +4,7 @@ from openpyxl import Workbook, load_workbook
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateException
 from openpyxl_templates.style import DefaultStyleSet, StyleSet
-from openpyxl_templates.templated_sheet import TemplatedSheet
+from openpyxl_templates.templated_sheet import TemplatedWorksheet
 from openpyxl_templates.utils import OrderedType, Typed
 
 
@@ -19,7 +19,7 @@ class MultipleActiveSheets(OpenpyxlTemplateException):
 
 
 class TemplatedWorkbook(metaclass=OrderedType):
-    item_class = TemplatedSheet
+    item_class = TemplatedWorksheet
 
     templated_sheets = None
     template_styles = Typed("template_styles", expected_type=StyleSet)

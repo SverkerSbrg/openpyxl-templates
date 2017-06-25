@@ -5,7 +5,7 @@ Quick start
 Installation
 ------------
 
-Python package::
+Install openpyxl-templates using pypi.
 
     pip install openpyxl-templates
 
@@ -19,7 +19,7 @@ The first thing you need to do is to create your workbook template. Below is an 
 
 Writing
 -------
-To write create an instance of your templated workbook, supply the sheets with data and save.
+To write create an instance of your templated workbook, supply data to the sheets and save.
 
 .. literalinclude:: examples/simple_usage.py
     :lines: 30-37
