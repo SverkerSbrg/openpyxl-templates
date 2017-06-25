@@ -158,10 +158,10 @@ class TableSheet(TemplatedSheet):
             if name in existing_names:
                 continue
 
-            if name not in self.workbook.template_styles:
+            if name not in self.template_styles:
                 raise TempleteStyleNotFound(name, self.workbook.template_styles)
 
-            self.workbook.add_named_style(self.workbook.template_styles[name])
+            self.workbook.add_named_style(self.template_styles[name])
 
     def write_title(self, worksheet, title=None):
         if not title:

@@ -26,6 +26,7 @@ class TemplatedSheet(metaclass=OrderedType):
     _sheetname = Typed("_sheetname", expected_type=str, allow_none=True)
     active = Typed("active", expected_type=bool, value=False)
     _workbook = None
+    template_styles = None
 
     # order = ... # TODO: Add ordering to sheets either through declaration on workbook or here
 

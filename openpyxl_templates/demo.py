@@ -83,24 +83,6 @@ class TemplatedPersonsSheet(TableSheet):
     hide_excess_columns = False
 
 
-
-# class ElementsSheet(TableSheet):
-#     title = "Title"
-#     description = "This is the description. It can be a couple of sentences long."
-#
-#     columns = [
-#         CharColumn(object_attr="char", header="CharColumn", width=15),
-#         # TextColumn(object_attr="text", header="TextColumn",  width=20, hidden=True),
-#         BooleanColumn(object_attr="boolean", header="BooleanColumn", width=18),
-#         IntegerColumn(object_attr="i", header="IntegerColumn", width=18),
-#         FloatColumn(object_attr="f", header="FloatColumn", width=15, group=True),
-#         ChoiceColumn(object_attr="choice", header="ChoiceColumn", width=15,
-#                      choices=(("Choice 1", 1), ("Choice 2", 2), ("Choice 3", 3))),
-#         TimeColumn(object_attr="time", header="TimeColumn", width=18),
-#         DateColumn(object_attr="date", header="DateColumn", width=20, group=True, hidden=False),
-#         DateTimeColumn(object_attr="datetime", header="DateTimeColumn", width=20, hidden=False)
-#     ]
-
 class DemoObject:
     def __init__(self, char, text, boolean, i, f, choice, time, date, datetime):
         self.char = char
@@ -164,3 +146,7 @@ if __name__ == "__main__":
     workbook.persons.write(objects=persons, title="Persons")
 
     workbook.save("demo.xlsx")
+
+    wb = DemoWorkbook(filename="demo_20170624_191326.xlsx")
+    print(list(wb.persons.read()))
+

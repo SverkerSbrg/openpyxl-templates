@@ -3,16 +3,29 @@
 
 .. include:: ../README.rst
 
+.. toctree::
+   :maxdepth: 2
 
+   overview
+   quick_start
+   change_log
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Templated workbooks
 
-   index
-   workbook_template
-   worksheet_template
-   style_set
+   templated_workbook
+   templated_worksheet
+   styles
+   custom_template
+
+.. toctree::
+   :maxdepth: 2
+   :caption: TableSheet
+
+   table_sheet
+   columns
+   custom_columns
 
 
 Indices and tables

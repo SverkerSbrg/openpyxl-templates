@@ -18,7 +18,7 @@ class MultipleActiveSheets(OpenpyxlTemplateException):
         super().__init__("The TemplatedWorkbook '%s' has multiple active sheets." % type(templated_workbook).__name__)
 
 
-class TemplatedWorkbook(Workbook, metaclass=OrderedType):
+class TemplatedWorkbook(metaclass=OrderedType):
     item_class = TemplatedSheet
 
     templated_sheets = None
@@ -28,13 +28,17 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
     _default_timestamp = "%Y%m%d_%H%M%S"
     _file_extension = "xlsx"
 
-    def __new__(cls, *args, file=None, **kwargs):
-        if file:
-            return load_workbook(file)
-        return super().__new__(cls)
+    workbook = Typed("workbook", expected_type=Workbook)
 
-    def __init__(self, template_styles=None):
+    # def __new__(cls, *args, file=None, **kwargs):
+    #     if file:
+    #         return load_workbook(file)
+    #     return super().__new__(cls)
+
+    def __init__(self, filename=None, template_styles=None):
         super().__init__()
+
+        self.workbook = load_workbook(filename=filename) if filename else Workbook()
 
         self.template_styles = template_styles or self.template_styles or DefaultStyleSet()
 
@@ -43,7 +47,8 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
             if not templated_sheet._sheetname:
                 templated_sheet._sheetname = attr
 
-            templated_sheet.workbook = self
+            templated_sheet.workbook = self.workbook
+            templated_sheet.template_styles = self.template_styles
             self.templated_sheets.append(templated_sheet)
 
         self.validate()
@@ -61,8 +66,8 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
             raise MultipleActiveSheets(self)
 
     def remove_all_sheets(self):
-        for sheetname in self.sheetnames:
-            del self[sheetname]
+        for sheetname in self.workbook.sheetnames:
+            del self.workbook[sheetname]
 
     def save(self, filename):
         if self.timestamp:
@@ -70,7 +75,7 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
 
         self.sort_worksheets()
 
-        return super().save(filename)
+        return self.workbook.save(filename)
 
     def sort_worksheets(self):
         order = {}
@@ -82,13 +87,13 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
                active_index = index
             index += 1
 
-        for sheetname in self.sheetnames:
+        for sheetname in self.workbook.sheetnames:
             if sheetname not in order:
                 order[sheetname] = index
                 index += 1
 
-        self._sheets = sorted(self._sheets, key=lambda s: order[s.title])
-        self.active = active_index
+        self.workbook._sheets = sorted(self.workbook._sheets, key=lambda s: order[s.title])
+        self.workbook.active = active_index
 
     def timestamp_filename(self, filename):
         return "%s_%s.%s" % (
@@ -100,5 +105,12 @@ class TemplatedWorkbook(Workbook, metaclass=OrderedType):
             ),
             self._file_extension
         )
+
+    @property
+    def sheetnames(self):
+        return self.workbook.sheetnames
+
+    def create_sheet(self, title=None, index=None):
+        return self.workbook.create_sheet(title, index)
 
 

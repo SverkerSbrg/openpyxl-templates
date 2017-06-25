@@ -21,7 +21,7 @@ class TemplatedWorkbookTests(TestCase):
 
     def test_templated_sheets_workbook(self):
         for sheet in self.wb.templated_sheets:
-            self.assertEqual(sheet.workbook, self.wb)
+            self.assertEqual(sheet.workbook, self.wb.workbook)
 
     def test_exists_false(self):
         self.assertFalse(self.wb.sheet1.exists)
