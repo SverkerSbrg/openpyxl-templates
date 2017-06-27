@@ -1,7 +1,11 @@
 ==========
 TableSheet
 ==========
-The ``TableSheet`` is a ``TemplatedWorksheet`` making it easy for reading and write excel Data Table. It is made up of an ordered set of typed columns which support when converting to and from Excel. Read more about what the columns to :ref:`columns`
+The ``TableSheet`` is a ``TemplatedWorksheet`` making it easy for reading and write excel Data Table. It is made up of an ordered set of typed columns which support when converting to and from Excel. Read more about what the columns do here :ref:`table_sheet_columns`
+
+
+TableSheet elements
+-------------------
 
 The ``TableSheet`` recognizes the following elements:
  * Title (optional) - A bold header for the Data Table
@@ -11,3 +15,4 @@ The ``TableSheet`` recognizes the following elements:
 .. literalinclude:: ../examples/table_sheet_elements.py
 
 .. image:: ../examples/table_sheet_elements.png
+
