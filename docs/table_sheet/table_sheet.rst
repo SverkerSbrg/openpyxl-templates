@@ -76,5 +76,13 @@ Reading
 -------
 
 
-Customize the behaviour
------------------------
+Customization
+-------------
+The TableSheet is built with customization in mind. See the source code for avaliable
+
+If you want your table to yield something else then a ``namedtuple`` for each row. It is easy to achieve by overriding the ``create_object`` method.
+
+.. literalinclude:: ../examples/customization.py
+    :lines: 5-22
+
+Feel free to explore the source code for additional possibilities. If you are missing hook or add a feature useful for others, feel free to submit a push request of get in touch.
