@@ -50,7 +50,6 @@ Styling
 ^^^^^^^
 
 The ``TableSheet`` has two style attributes which can be modified:
-
     * ``tile_style`` - The style to be used for the title, defaults to "Title"
     * ``description_style`` - The style to be used for the description, defaults to "Description"
 
@@ -63,7 +62,6 @@ Additional settings
 ^^^^^^^^^^^^^^^^^^^
 
 The behavior or the ``TableSheet`` can be modified with the following settings
-
     * ``format_as_table`` - Controlling whether the TableSheet will format the output as a DataTable, defaults to ``True``
     * ``freeze_pane`` - Controlling whether the TableSheet will utilize the freeze pane feature, defaults to ``True``
     * ``hide_excess_columns`` - When enabled the TableSheet will hide all columns not used by columns, defaults to ``True``
@@ -73,3 +71,10 @@ The behavior or the ``TableSheet`` can be modified with the following settings
 Writing
 -------
 
+
+Reading
+-------
+
+
+Customize the behaviour
+-----------------------
