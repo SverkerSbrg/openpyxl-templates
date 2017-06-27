@@ -10,8 +10,12 @@ ws = DemoTableSheet()
 assert (tuple(ws.columns) == (ws.column1, ws.column2))
 
 
-class InheritingTableSheet(DemoTableSheet):
+class ExtendedDemoTableSheet(DemoTableSheet):
     column3 = CharColumn()
+
+
+ws = ExtendedDemoTableSheet()
+assert (tuple(ws.columns) == (ws.column1, ws.column2, ws.column3))
 
 
 class DemoTableSheet(TableSheet):

@@ -21,21 +21,31 @@ The TableSheet does not support reading the title and description elements.
 Configuration
 -------------
 
-Creating a ``TableSheet`` follows the same syntax as the ``TemplatedWorkbook``. The columns are declared as class variables on a TableSheet which will identify and register the columns. The complete and ordered, set of columns are accessible under the ``.columns`` attribute.
+A ``TableSheet`` is created by extending the TableSheet class, declaring columns and optionally changing styling and other settings. One the TableSheet class has been created an instance of this class can be supplied to the ``TemplatedWorkbook``.
+Creating a ``TableSheet`` follows the same syntax as the ``TemplatedWorkbook``.
+
+Declaring columns
+^^^^^^^^^^^^^^^^^
+The columns are declared as class variables on a TableSheet which will identify and register the columns (in order of declaration). The columns are avaliable under the ``.columns`` attribute.
+
+A TableSheet must always have atleast one ``TableColumn``.
 
 .. literalinclude:: ../examples/table_sheet.py
-    :lines: 1-10
+    :lines: 1-6
 
-The column declaration has full support for inheritance. The following declaration is perfectly legal.
+The column declaration supports inheritance, the following declaration is perfectly legal.
 
 .. literalinclude:: ../examples/table_sheet.py
     :lines: 13-14
 
 Note that the columns of the parent class are always considered to have been declared before the columns of the child.
 
-A TableSheet must always have atleast one Column.
 
 All columns must have a header and there must not be any duplicated headers within the same sheet. The TableSheet will automatically use the attribute name used when declaring the column as header.
 
 .. literalinclude:: ../examples/table_sheet.py
-    :lines: 17-19
+    :lines: 21-23
+
+Styling
+^^^^^^^
+
