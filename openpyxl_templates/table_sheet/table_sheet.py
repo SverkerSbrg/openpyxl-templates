@@ -82,7 +82,7 @@ class TableSheet(TemplatedWorksheet):
     freeze_header = Typed("freeze_header", expected_type=bool, value=True)
     hide_excess_columns = Typed("hide_excess_columns", expected_type=bool, value=True)
 
-    look_for_header = Typed("look_for_header", expected_type=bool, value=True)
+    look_for_headers = Typed("look_for_headers", expected_type=bool, value=True)
     exception_policy = Typed(
         "exception_policy",
         expected_type=TableSheetExceptionPolicy,
@@ -251,8 +251,8 @@ class TableSheet(TemplatedWorksheet):
             for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):
                 worksheet.column_dimensions[get_column_letter(i)].hidden = True
 
-    def read(self, exception_policy=None, look_for_header=None):
-        header_found = not (look_for_header if look_for_header is not None else self.look_for_header)
+    def read(self, exception_policy=None, look_for_headers=None):
+        header_found = not (look_for_headers if look_for_headers is not None else self.look_for_headers)
         _exception_policy = exception_policy if exception_policy is not None else self.exception_policy
 
         rows = self.worksheet.__iter__()

@@ -21,8 +21,8 @@ The TableSheet does not support reading the title and description elements.
 Configuration
 -------------
 
-A ``TableSheet`` is created by extending the TableSheet class, declaring columns and optionally changing styling and other settings. One the TableSheet class has been created an instance of this class can be supplied to the ``TemplatedWorkbook``.
-Creating a ``TableSheet`` follows the same syntax as the ``TemplatedWorkbook``.
+A ``TableSheet`` is created by extending the TableSheet class, declaring columns and optionally changing styling and other settings. Once the TableSheet class has been created an instance of this class is be supplied to the ``TemplatedWorkbook``.
+
 
 Declaring columns
 ^^^^^^^^^^^^^^^^^
@@ -48,4 +48,25 @@ All columns must have a header and there must not be any duplicated headers with
 
 Styling
 ^^^^^^^
+
+The ``TableSheet`` has two style attributes which can be modified:
+
+    * ``tile_style`` - The style to be used for the title, defaults to "Title"
+    * ``description_style`` - The style to be used for the description, defaults to "Description"
+
+Make sure that the styles referenced are available either in the workbook or in the ``StyleSet`` of the ``TemplatedWorkbook``. Read more about styling ref:`styling <here>`.
+
+Additional settings
+^^^^^^^^^^^^^^^^^^^
+
+The behavior or the ``TableSheet`` can be modified with the following settings
+
+    * ``format_as_table`` - Controlling whether the TableSheet will format the output as a DataTable, defaults to ``True``
+    * ``freeze_pane`` - Controlling whether the TableSheet will utilize the freeze pane feature, defaults to ``True``
+    * ``hide_excess_columns`` - When enabled the TableSheet will hide all columns not used by columns, defaults to ``True``
+    * ``exception_policy`` - Default policy for exception handling when reading, defaults to ``RaiseCellException``. See below for further details
+    * ``look_for_headers`` - When reading and look_for_headers is True, the TableSheet will look for an exact match of the expected header row before looking for columns. Defaults to ``True``. see below for further details
+
+Writing
+-------
 
