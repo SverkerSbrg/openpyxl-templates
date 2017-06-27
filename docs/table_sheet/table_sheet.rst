@@ -36,7 +36,7 @@ A TableSheet must always have atleast one ``TableColumn``.
 The column declaration supports inheritance, the following declaration is perfectly legal.
 
 .. literalinclude:: ../examples/table_sheet.py
-    :lines: 13-14
+    :lines: 14-15
 
 Note that the columns of the parent class are always considered to have been declared before the columns of the child.
 
@@ -44,7 +44,7 @@ Note that the columns of the parent class are always considered to have been dec
 All columns must have a header and there must not be any duplicated headers within the same sheet. The TableSheet will automatically use the attribute name used when declaring the column as header.
 
 .. literalinclude:: ../examples/table_sheet.py
-    :lines: 21-23
+    :lines: 22-24
 
 Styling
 ^^^^^^^
@@ -53,6 +53,9 @@ The ``TableSheet`` has two style attributes which can be modified:
 
     * ``tile_style`` - The style to be used for the title, defaults to "Title"
     * ``description_style`` - The style to be used for the description, defaults to "Description"
+
+.. literalinclude:: ../examples/table_sheet.py
+    :lines: 28-33
 
 Make sure that the styles referenced are available either in the workbook or in the ``StyleSet`` of the ``TemplatedWorkbook``. Read more about styling ref:`styling <here>`.
 
