@@ -82,6 +82,13 @@ class TableSheet(TemplatedWorksheet):
     freeze_header = Typed("freeze_header", expected_type=bool, value=True)
     hide_excess_columns = Typed("hide_excess_columns", expected_type=bool, value=True)
 
+    look_for_header = Typed("look_for_header", expected_type=bool, value=True)
+    exception_policy = Typed(
+        "exception_policy",
+        expected_type=TableSheetExceptionPolicy,
+        value=TableSheetExceptionPolicy.RaiseCellException
+    )
+
     _first_data_cell = None
     _last_data_cell = None
     _first_header_cell = None
@@ -172,6 +179,13 @@ class TableSheet(TemplatedWorksheet):
 
         worksheet.append((title,))
 
+        worksheet.merge_cells(
+            start_row=title.row,
+            start_column=title.col_idx,
+            end_row=title.row,
+            end_column=title.col_idx + len(self.columns) - 1
+        )
+
     def write_description(self, worksheet, description=None):
         if not description:
             return
@@ -180,6 +194,13 @@ class TableSheet(TemplatedWorksheet):
         description.style = self.description_style
 
         worksheet.append((description,))
+
+        worksheet.merge_cells(
+            start_row=description.row,
+            start_column=description.col_idx,
+            end_row=description.row,
+            end_column=description.col_idx + len(self.columns) - 1
+        )
 
     def write_headers(self, worksheet):
         headers = tuple(
@@ -230,8 +251,9 @@ class TableSheet(TemplatedWorksheet):
             for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):
                 worksheet.column_dimensions[get_column_letter(i)].hidden = True
 
-    def read(self, exception_policy=TableSheetExceptionPolicy.RaiseCellException, look_for_header=True):
-        header_found = not look_for_header
+    def read(self, exception_policy=None, look_for_header=None):
+        header_found = not (look_for_header if look_for_header is not None else self.look_for_header)
+        _exception_policy = exception_policy if exception_policy is not None else self.exception_policy
 
         rows = self.worksheet.__iter__()
         try:
@@ -241,14 +263,14 @@ class TableSheet(TemplatedWorksheet):
             row_exceptions = []
             while True:
                 try:
-                    yield self.object_from_row(rows.__next__(), exception_policy=exception_policy)
+                    yield self.object_from_row(rows.__next__(), exception_policy=_exception_policy)
                 except CellExceptions as e:
-                    if exception_policy <= TableSheetExceptionPolicy.RaiseRowException:
+                    if _exception_policy <= TableSheetExceptionPolicy.RaiseRowException:
                         raise e
                     else:
                         row_exceptions.append(e)
 
-                if row_exceptions and exception_policy <= TableSheetExceptionPolicy.RaiseSheetException:
+                if row_exceptions and _exception_policy <= TableSheetExceptionPolicy.RaiseSheetException:
                     raise RowExceptions(row_exceptions)
         except StopIteration:
             pass

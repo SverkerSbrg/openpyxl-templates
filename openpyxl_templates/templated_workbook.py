@@ -3,7 +3,7 @@ from datetime import datetime
 from openpyxl import Workbook, load_workbook
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateException
-from openpyxl_templates.style import DefaultStyleSet, StyleSet
+from openpyxl_templates.styles import DefaultStyleSet, StyleSet
 from openpyxl_templates.templated_sheet import TemplatedWorksheet
 from openpyxl_templates.utils import OrderedType, Typed
 

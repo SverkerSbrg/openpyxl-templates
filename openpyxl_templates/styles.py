@@ -95,12 +95,13 @@ class DefaultStyleSet(StyleSet):
             ExtendedStyle(
                 base="Empty",
                 name="Title",
-                font={"size": 20},
+                font={"size": 20}
             ),
             ExtendedStyle(
                 base="Empty",
                 name="Description",
-                font={"color": "FF777777"}
+                font={"color": "FF777777"},
+                alignment={"wrap_text": True}
             ),
             ExtendedStyle(
                 base="Default",
