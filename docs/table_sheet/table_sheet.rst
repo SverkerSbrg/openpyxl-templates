@@ -10,4 +10,4 @@ The ``TableSheet`` recognizes the following elements:
 
 .. literalinclude:: examples/table_sheet_elements.py
 
-.. image:: examples/table_sheet_elements.png
+.. image:: ../examples/table_sheet_elements.png
