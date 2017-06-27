@@ -26,7 +26,7 @@ A ``TableSheet`` is created by extending the TableSheet class, declaring columns
 
 Declaring columns
 ^^^^^^^^^^^^^^^^^
-The columns are declared as class variables on a TableSheet which will identify and register the columns (in order of declaration). The columns are avaliable under the ``.columns`` attribute.
+The columns are declared as class variables on a TableSheet which will identify and register the columns (in order of declaration). The columns are avaliable under the ``columns`` attribute.
 
 A TableSheet must always have atleast one ``TableColumn``.
 
@@ -49,24 +49,24 @@ All columns must have a header and there must not be any duplicated headers with
 Styling
 ^^^^^^^
 
-The ``TableSheet`` has two style attributes which can be modified:
-    * ``tile_style`` - The style to be used for the title, defaults to "Title"
-    * ``description_style`` - The style to be used for the description, defaults to "Description"
+The TableSheet has two style attributes which can be modified:
+    * ``tile_style`` - Name of the style to be used for the title, defaults to *"Title"*
+    * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
 
 .. literalinclude:: ../examples/table_sheet.py
     :lines: 28-33
 
-Make sure that the styles referenced are available either in the workbook or in the ``StyleSet`` of the ``TemplatedWorkbook``. Read more about styling ref:`styling <here>`.
+Make sure that the styles referenced are available either in the workbook or in the ``StyleSet`` of the ``TemplatedWorkbook``. Read more about styling :ref:`styling <here>`.
 
 Additional settings
 ^^^^^^^^^^^^^^^^^^^
 
-The behavior or the ``TableSheet`` can be modified with the following settings
-    * ``format_as_table`` - Controlling whether the TableSheet will format the output as a DataTable, defaults to ``True``
-    * ``freeze_pane`` - Controlling whether the TableSheet will utilize the freeze pane feature, defaults to ``True``
-    * ``hide_excess_columns`` - When enabled the TableSheet will hide all columns not used by columns, defaults to ``True``
+The behavior or the TableSheet can be modified with the following settings
+    * ``format_as_table`` - Controlling whether the TableSheet will format the output as a DataTable, defaults to *True*
+    * ``freeze_pane`` - Controlling whether the TableSheet will utilize the freeze pane feature, defaults to *True*
+    * ``hide_excess_columns`` - When enabled the TableSheet will hide all columns not used by columns, defaults to *True*
     * ``exception_policy`` - Default policy for exception handling when reading, defaults to ``RaiseCellException``. See below for further details
-    * ``look_for_headers`` - When reading and look_for_headers is True, the TableSheet will look for an exact match of the expected header row before looking for columns. Defaults to ``True``. see below for further details
+    * ``look_for_headers`` - When reading and look_for_headers is True, the TableSheet will look for an exact match of the expected header row before looking for columns. Defaults to *True*. see below for further details
 
 Writing
 -------
