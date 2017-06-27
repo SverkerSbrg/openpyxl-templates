@@ -16,7 +16,7 @@ The ``TableSheet`` recognizes the following elements:
 
 .. image:: ../examples/table_sheet_elements.png
 
-The TableSheet does not support reading the title and description elements.
+The TableSheet does not support reading the title or description.
 
 Configuration
 -------------
@@ -85,4 +85,4 @@ If you want your table to yield something else then a ``namedtuple`` for each ro
 .. literalinclude:: ../examples/customization.py
     :lines: 5-22
 
-Feel free to explore the source code for additional possibilities. If you are missing hook or add a feature useful for others, feel free to submit a push request of get in touch.
+Feel free to explore the source code for additional possibilities. If you are missing hook or add a feature useful for others, feel free to submit a push request.
