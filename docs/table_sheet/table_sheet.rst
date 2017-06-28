@@ -8,6 +8,7 @@ Elements of the TableSheet
 --------------------------
 
 The ``TableSheet`` recognizes the following elements:
+
  * **Title** (optional) - A bold header for the Data Table
  * **Description** (optional) - A smaller description intended for simple instructions
  * **Columns** - The Columns in the datatable, which in turn is made up of **headers** and **rows**
@@ -49,8 +50,11 @@ An instance of a column should never be used on multiple sheets.
 
 Writing
 -------
+Simple usage
+^^^^^^^^^^^^
 
 Writing is done by an iterable of objects to the write function and optionally a title and/or description. The write function will then:
+
     * Prepare the workbook by registering all required styles, data validation etc.
     * Write title, and description if they are supplied
     * Create the headers and rows
@@ -61,6 +65,9 @@ Writing will always recreate the entire sheet from scratch, so any preexisting d
 .. literalinclude:: ../examples/table_sheet_write_read.py
     :lines: 5-33
 
+Using objects
+^^^^^^^^^^^^^
+
 The write accepts rows iterable containing tuples or list as in the example above. If an other type is encountered the columns will try to get the attribute directly from the object using ``getattr(object, column.object_attribute)``. The object_attribute can be defined explicitly and will default to the attribute name used when adding the column to the sheet.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
@@ -70,6 +77,7 @@ Styling
 ^^^^^^^
 
 The TableSheet has two style attributes:
+
     * ``tile_style`` - Name of the style to be used for the title, defaults to *"Title"*
     * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
 
@@ -90,10 +98,17 @@ The write behaviour of the TableSheet can be modified with the following setting
 
 Reading
 -------
+
+Simple usage
+^^^^^^^^^^^^
+
 The ``read`` method does two things. First it will verify the format of the file by looking for the header row. If the headers cannot be found a en exception will be raised. Once the headers has been found all subsequent rows in the excel will be treated as data and parsed to `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_ automatically after the columns has transformed the data from excel to python.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
     :lines: 64-66
+
+Iterate directly
+^^^^^^^^^^^^^^^^
 
 The TableSheet can also be used as an iterator directly
 
@@ -113,7 +128,7 @@ The policy only applies to exceptions occuring when reading rows. Exceptions suc
 
 Reading without looking for headers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Looking for headers can be disabled by setting ``look_for_headers`` to *False* or passing it as a named argument directly to the read function. When this is done the TableSheet will start looking for valid rows at once. This will most likely cause an exception if the header row is indeed present
+Looking for headers can be disabled by setting ``look_for_headers`` to *False* or passing it as a named argument directly to the read function. When this is done the TableSheet will start looking for valid rows at once. This will most likely cause an exception if the title, description or header row is present since they will be treated as rows.
 
 Customization
 -------------
