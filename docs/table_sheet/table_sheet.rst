@@ -18,11 +18,10 @@ The ``TableSheet`` recognizes the following elements:
 
 The TableSheet does not support reading the title or description.
 
-Configuration
--------------
+Creating the TableSheet
+-----------------------
 
 A ``TableSheet`` is created by extending the TableSheet class, declaring columns and optionally changing styling and other settings. Once the TableSheet class has been created an instance of this class is be supplied to the ``TemplatedWorkbook``.
-
 
 Declaring columns
 ^^^^^^^^^^^^^^^^^
@@ -46,28 +45,6 @@ All columns must have a header and there must not be any duplicated headers with
 .. literalinclude:: ../examples/table_sheet.py
     :lines: 22-24
 
-Styling
-^^^^^^^
-
-The TableSheet has two style attributes which can be modified:
-    * ``tile_style`` - Name of the style to be used for the title, defaults to *"Title"*
-    * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
-
-.. literalinclude:: ../examples/table_sheet.py
-    :lines: 28-33
-
-Make sure that the styles referenced are available either in the workbook or in the ``StyleSet`` of the ``TemplatedWorkbook``. Read more about styling :ref:`styling <here>`.
-
-Additional settings
-^^^^^^^^^^^^^^^^^^^
-
-The behavior or the TableSheet can be modified with the following settings
-    * ``format_as_table`` - Controlling whether the TableSheet will format the output as a DataTable, defaults to *True*
-    * ``freeze_pane`` - Controlling whether the TableSheet will utilize the freeze pane feature, defaults to *True*
-    * ``hide_excess_columns`` - When enabled the TableSheet will hide all columns not used by columns, defaults to *True*
-    * ``exception_policy`` - Default policy for exception handling when reading, defaults to ``RaiseCellException``. See below for further details
-    * ``look_for_headers`` - When reading and look_for_headers is True, the TableSheet will look for an exact match of the expected header row before looking for columns. Defaults to *True*. see below for further details
-
 Writing
 -------
 
@@ -82,6 +59,26 @@ Writing will always recreate the entire sheet from scratch, so any preexisting d
 .. literalinclude:: ../examples/table_sheet_write_read.py
     :lines: 5-34
 
+Styling
+^^^^^^^
+
+The TableSheet has two style attributes which can be modified:
+    * ``tile_style`` - Name of the style to be used for the title, defaults to *"Title"*
+    * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
+
+.. literalinclude:: ../examples/table_sheet.py
+    :lines: 28-33
+
+Make sure that the styles referenced are available either in the workbook or in the ``StyleSet`` of the ``TemplatedWorkbook``. Read more about styling :ref:`styling <here>`.
+
+Additional settings
+^^^^^^^^^^^^^^^^^^^
+The write behaviour of the TableSheet can be modified with the following settings:
+    * ``format_as_table`` - Controlling whether the TableSheet will format the output as a DataTable, defaults to *True*
+    * ``freeze_pane`` - Controlling whether the TableSheet will utilize the freeze pane feature, defaults to *True*
+    * ``hide_excess_columns`` - When enabled the TableSheet will hide all columns not used by columns, defaults to *True*
+
+
 Reading
 -------
 The ``read`` method does two things. First it will verify the format of the file by looking for the header row. If the headers cannot be found a en exception will be raised. Once the headers has been found all subsequent rows in the excel will be treated as data and parsed to `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_ automatically after the columns has transformed the data from excel to python.
@@ -89,7 +86,21 @@ The ``read`` method does two things. First it will verify the format of the file
 .. literalinclude:: ../examples/table_sheet_write_read.py
     :lines: 36-38
 
-Looking for headers can be disabled by setting ``look_for_headers`` to *False* on the TableSheet class or passing it as an argument to the read function
+The TableSheet can also be used as an iterator directly
+
+.. literalinclude:: ../examples/table_sheet_write_read.py
+    :lines: 40-41
+
+Exception handling
+^^^^^^^^^^^^^^^^^^
+    * ``exception_policy`` - Default policy for exception handling when reading, defaults to ``RaiseCellException``. See below for further details
+
+Additional settings
+^^^^^^^^^^^^^^^^^^^
+
+    * ``look_for_headers`` - When reading and look_for_headers is True, the TableSheet will look for an exact match of the expected header row before looking for columns. Defaults to *True*. see below for further details
+
+Looking for headers can be disabled by setting ``look_for_headers`` to *False* on the TableSheet class or passing it as an argument to the read function.
 
 Customization
 -------------

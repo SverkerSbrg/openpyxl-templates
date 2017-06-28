@@ -28,11 +28,14 @@ wb.demo_sheet2.write(
         ("Row 3", 3),
     ),
     title="The second sheet",
-    description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. In euismod, sem eu "
-                "posuere vestibulum, lacus nulla faucibus sem, quis ultricies mi ante quis velit. "
+    description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. In euismod, sem eu."
 )
 wb.save("read_write.xlsx")
 
 wb = DemoTemplatedWorksheet("read_write.xlsx")
 for row in wb.demo_sheet1.read():
+    print(row)
+
+
+for row in wb.demo_sheet2:
     print(row)
