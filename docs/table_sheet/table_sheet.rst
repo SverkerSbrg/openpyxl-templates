@@ -50,7 +50,7 @@ An instance of a column should never be used on multiple sheets.
 Writing
 -------
 
-Writing is done by an iterable of objects to the write function and optionally a title and/or description. The function will:
+Writing is done by an iterable of objects to the write function and optionally a title and/or description. The write function will then:
     * Prepare the workbook by registering all required styles, data validation etc.
     * Write title, and description if they are supplied
     * Create the headers and rows
@@ -69,7 +69,7 @@ The write accepts rows iterable containing tuples or list as in the example abov
 Styling
 ^^^^^^^
 
-The TableSheet has two style attributes which can be modified:
+The TableSheet has two style attributes:
     * ``tile_style`` - Name of the style to be used for the title, defaults to *"Title"*
     * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
 
@@ -93,23 +93,27 @@ Reading
 The ``read`` method does two things. First it will verify the format of the file by looking for the header row. If the headers cannot be found a en exception will be raised. Once the headers has been found all subsequent rows in the excel will be treated as data and parsed to `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_ automatically after the columns has transformed the data from excel to python.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 36-38
+    :lines: 64-66
 
 The TableSheet can also be used as an iterator directly
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 40-41
+    :lines: 70-71
 
 Exception handling
 ^^^^^^^^^^^^^^^^^^
-    * ``exception_policy`` - Default policy for exception handling when reading, defaults to ``RaiseCellException``. See below for further details
+The way the TableSheet handles exceptions can be configured by setting the ``exception_policy``. It can be set on the TableSheet class or passed as an argument to the read function. The following policies are avaliable:
+    * ``RaiseCellException`` (default) - All exceptions will be raised when encountered
+    * ``RaiseRowException`` - Cell level exceptions such as type errors, in the same row will be collected and raised as a RowException
+    * ``RaiseSheetException`` - All row exceptions will be collected and raised once reading has finished. So that all valid rows will be read, and all exceptions will be recorded.
+    * ``IgnoreRow`` - Invalid rows will be ignored
 
-Additional settings
-^^^^^^^^^^^^^^^^^^^
+The policy only applies to exceptions occuring when reading rows. Exceptions such as ``HeadersNotFound`` will be raised irregardless.
 
-    * ``look_for_headers`` - When reading and look_for_headers is True, the TableSheet will look for an exact match of the expected header row before looking for columns. Defaults to *True*. see below for further details
 
-Looking for headers can be disabled by setting ``look_for_headers`` to *False* on the TableSheet class or passing it as an argument to the read function.
+Reading without looking for headers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Looking for headers can be disabled by setting ``look_for_headers`` to *False* or passing it as a named argument directly to the read function. When this is done the TableSheet will start looking for valid rows at once. This will most likely cause an exception if the header row is indeed present
 
 Customization
 -------------
