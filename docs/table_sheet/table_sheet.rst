@@ -45,10 +45,12 @@ All columns must have a header and there must not be any duplicated headers with
 .. literalinclude:: ../examples/table_sheet.py
     :lines: 22-24
 
+An instance of a column should never be used on multiple sheets.
+
 Writing
 -------
 
-Writing is done by passing data to the write function. The function will:
+Writing is done by an iterable of objects to the write function and optionally a title and/or description. The function will:
     * Prepare the workbook by registering all required styles, data validation etc.
     * Write title, and description if they are supplied
     * Create the headers and rows
@@ -57,7 +59,12 @@ Writing is done by passing data to the write function. The function will:
 Writing will always recreate the entire sheet from scratch, so any preexisting data will be lost. If you want to preserve your data you could read existing rows and combine them with the new data.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 5-34
+    :lines: 5-33
+
+The write accepts rows iterable containing tuples or list as in the example above. If an other type is encountered the columns will try to get the attribute directly from the object using ``getattr(object, column.object_attribute)``. The object_attribute can be defined explicitly and will default to the attribute name used when adding the column to the sheet.
+
+.. literalinclude:: ../examples/table_sheet_write_read.py
+    :lines: 38-51
 
 Styling
 ^^^^^^^
@@ -66,8 +73,10 @@ The TableSheet has two style attributes which can be modified:
     * ``tile_style`` - Name of the style to be used for the title, defaults to *"Title"*
     * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
 
-.. literalinclude:: ../examples/table_sheet.py
-    :lines: 28-33
+.. literalinclude:: ../examples/table_sheet_write_read.py
+    :lines: 54-60
+
+Styling of columns done on the columns themselves.
 
 Make sure that the styles referenced are available either in the workbook or in the ``StyleSet`` of the ``TemplatedWorkbook``. Read more about styling :ref:`styling <here>`.
 

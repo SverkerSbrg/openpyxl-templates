@@ -24,11 +24,4 @@ class DemoTableSheet(TableSheet):
     column2 = IntColumn()  # The header of column2 will be set automatically to "column2"
 
 
-# ------------------- Styling -------------------
-class PrettyDemoSheet(TableSheet):
-    title_style = "Bold & red, title"
-    description_style = "Extra tiny, description"
-
-    column1 = CharColumn()
-    column2 = IntColumn()
 
