@@ -71,14 +71,23 @@ The behavior or the TableSheet can be modified with the following settings
 Writing
 -------
 
+Writing is done by passing data to the write function. The function will:
+    * Prepare the workbook by registering all required styles, data validation etc.
+    * Write title, and description if they are supplied
+    * Create the headers and rows
+    * Apply sheet level formatting such as creating the Data Table and setting the freeze pane
 
+Writing will always recreate the entire sheet from scratch, so any preexisting data will be lost. If you want to preserve your data you could read existing rows and combine them with the new data.
+
+.. literalinclude:: ../examples/table_sheet_write_read.py
+    :lines: 5-34
 
 Reading
 -------
-The ``read`` method does two things. First it will verify the format of the file by looking for the header row. If the headers cannot be found a en exception will be raised. Once the headers has been found all subsequent rows in the excel will be treated as data and converted to `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_ automatically after the columns has transformed the data from excel to python.
+The ``read`` method does two things. First it will verify the format of the file by looking for the header row. If the headers cannot be found a en exception will be raised. Once the headers has been found all subsequent rows in the excel will be treated as data and parsed to `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_ automatically after the columns has transformed the data from excel to python.
 
-.. literalinclude:: ../examples/table_sheet_reading.py
-    :lines: 28-33
+.. literalinclude:: ../examples/table_sheet_write_read.py
+    :lines: 36-38
 
 Looking for headers can be disabled by setting ``look_for_headers`` to *False* on the TableSheet class or passing it as an argument to the read function
 
