@@ -166,7 +166,7 @@ class TableSheet(TemplatedWorksheet):
                 continue
 
             if name not in self.template_styles:
-                raise TempleteStyleNotFound(name, self.workbook.template_styles)
+                raise TempleteStyleNotFound(name, self.template_styles)
 
             self.workbook.add_named_style(self.template_styles[name])
 
