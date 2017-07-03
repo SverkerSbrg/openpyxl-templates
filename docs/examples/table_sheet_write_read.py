@@ -1,5 +1,6 @@
 from openpyxl_templates import TemplatedWorkbook
-from openpyxl_templates.table_sheet import TableSheet, CharColumn, IntColumn
+from openpyxl_templates.table_sheet import TableSheet
+from openpyxl_templates.table_sheet.columns import CharColumn, IntColumn
 
 
 class DemoTableSheet(TableSheet):

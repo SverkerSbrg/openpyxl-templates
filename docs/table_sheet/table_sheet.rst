@@ -31,12 +31,12 @@ The columns are declared as class variables on a TableSheet which will identify 
 A TableSheet must always have atleast one ``TableColumn``.
 
 .. literalinclude:: ../examples/table_sheet.py
-    :lines: 1-6
+    :lines: 1-7
 
 The column declaration supports inheritance, the following declaration is perfectly legal.
 
 .. literalinclude:: ../examples/table_sheet.py
-    :lines: 14-15
+    :lines: 15-16
 
 Note that the columns of the parent class are always considered to have been declared before the columns of the child.
 
@@ -44,7 +44,7 @@ Note that the columns of the parent class are always considered to have been dec
 All columns must have a header and there must not be any duplicated headers within the same sheet. The TableSheet will automatically use the attribute name used when declaring the column as header.
 
 .. literalinclude:: ../examples/table_sheet.py
-    :lines: 22-24
+    :lines: 23-25
 
 An instance of a column should never be used on multiple sheets.
 
@@ -63,7 +63,7 @@ Writing is done by an iterable of objects to the write function and optionally a
 Writing will always recreate the entire sheet from scratch, so any preexisting data will be lost. If you want to preserve your data you could read existing rows and combine them with the new data.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 5-33
+    :lines: 6-34
 
 Using objects
 ^^^^^^^^^^^^^
@@ -71,7 +71,7 @@ Using objects
 The write accepts rows iterable containing tuples or list as in the example above. If an other type is encountered the columns will try to get the attribute directly from the object using ``getattr(object, column.object_attribute)``. The object_attribute can be defined explicitly and will default to the attribute name used when adding the column to the sheet.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 38-51
+    :lines: 39-52
 
 Styling
 ^^^^^^^
@@ -82,7 +82,7 @@ The TableSheet has two style attributes:
     * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 54-60
+    :lines: 55-61
 
 Styling of columns done on the columns themselves.
 
@@ -105,7 +105,7 @@ Simple usage
 The ``read`` method does two things. First it will verify the format of the file by looking for the header row. If the headers cannot be found a en exception will be raised. Once the headers has been found all subsequent rows in the excel will be treated as data and parsed to `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_ automatically after the columns has transformed the data from excel to python.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 64-66
+    :lines: 65-67
 
 Iterate directly
 ^^^^^^^^^^^^^^^^
@@ -113,7 +113,7 @@ Iterate directly
 The TableSheet can also be used as an iterator directly
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 70-71
+    :lines: 71-72
 
 Exception handling
 ^^^^^^^^^^^^^^^^^^
@@ -135,6 +135,6 @@ Customization
 The TableSheet is built with customization in mind. If you want your table to yield something else then a ``namedtuple`` for each row. It is easy to achieve by overriding the ``create_object`` method.
 
 .. literalinclude:: ../examples/customization.py
-    :lines: 5-22
+    :lines: 6-23
 
 Feel free to explore the source code for additional possibilities. If you are missing hook or add a feature useful for others, feel free to submit a push request.

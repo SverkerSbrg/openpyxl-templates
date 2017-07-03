@@ -1,8 +1,8 @@
 from datetime import date
 from enum import Enum
-
 from openpyxl_templates import TemplatedWorkbook
-from openpyxl_templates.table_sheet import TableSheet, CharColumn, DateColumn, ChoiceColumn
+from openpyxl_templates.table_sheet import TableSheet
+from openpyxl_templates.table_sheet.columns import CharColumn, ChoiceColumn, DateColumn
 
 
 class Fruits(Enum):
