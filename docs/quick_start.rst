@@ -14,7 +14,7 @@ Creating your template
 The first thing you need to do is to create your workbook template. Below is an example using the TableSheet to create an template for listing fruit loving persons.
 
 .. literalinclude:: examples/simple_usage.py
-    :lines: 1-25
+    :lines: 1-26
 
 
 Writing
@@ -22,7 +22,7 @@ Writing
 To write create an instance of your templated workbook, supply data to the sheets and save.
 
 .. literalinclude:: examples/simple_usage.py
-    :lines: 30-37
+    :lines: 31-38
 
 The templated workbook and its templated sheets handles all formatting. Here is the persons sheet created by the code above.
 
@@ -33,5 +33,5 @@ Reading
 To read use the filename argument of your workbook template.
 
 .. literalinclude:: examples/simple_usage.py
-    :lines: 43-46
+    :lines: 44-47
 
