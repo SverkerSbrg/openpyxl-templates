@@ -15,3 +15,8 @@ pypi
 
 openpyxl
     https://openpyxl.readthedocs.io/en/default/
+
+
+.. warning::
+
+    This package is still in beta and cannot be considered mature. The api may still be subject to change and the documentation is at best patchy.
