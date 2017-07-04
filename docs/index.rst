@@ -29,11 +29,3 @@ Table of contents
 
    table_sheet/table_sheet
    table_sheet/table_columns
-
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
