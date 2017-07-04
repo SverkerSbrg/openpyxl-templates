@@ -1,7 +1,7 @@
 ==========
 TableSheet
 ==========
-The ``TableSheet`` is a ``TemplatedWorksheet`` making it easy for reading and write excel Data Table. It is made up of an ordered set of typed columns which support when converting to and from Excel. Read more about what the columns do :ref:`here <table_sheet_columns>`.
+The ``TableSheet`` is a ``TemplatedWorksheet`` making it easy for reading and write sheets with excel Data Tables. It is made up of an ordered set of typed columns which support when converting to and from Excel. Read more about what the columns do :ref:`here <table_sheet_columns>`.
 
 
 Elements of the TableSheet
