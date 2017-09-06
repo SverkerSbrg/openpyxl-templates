@@ -22,7 +22,7 @@ Or use the filename argument to open an existing excel file.
 
 
 .. literalinclude:: examples/templated_workbook.py
-    :lines: 12
+    :lines: 11
 
 
 The templated workbook will identify all templated sheets and make them avaliable in order of declaration.
