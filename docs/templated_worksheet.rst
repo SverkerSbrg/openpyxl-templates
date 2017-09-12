@@ -14,17 +14,17 @@ The TemplatedWorksheet will handle managing the openpyxl worksheet so you do not
 
 To create a TemplatedWorksheet you should implement the read and write method. We'll demonstrate this by creating a DictSheet a TemplatedWorksheet which reads and writes simple key value pairs in a python dict.
 
-.. literalinclude:: exampels/templated_worksheet.py
+.. literalinclude:: examples/templated_worksheet.py
     :lines: 5-19
 
 We can now add our DictSheet to a TemplatedWorkbook and use it to create an excel file.
 
-.. literalinclude:: exampels/templated_worksheet.py
+.. literalinclude:: examples/templated_worksheet.py
     :lines: 22-34
 
 We can use the same TemplatedWorkbook to read the data from the file we just created.
 
-.. literalinclude:: exampels/templated_worksheet.py
+.. literalinclude:: examples/templated_worksheet.py
     :lines: 36-40
 
 Have a look at the :ref:`TableSheet <TableSheet>` for a more advanced example. It includes type handling and plenty of styling.
