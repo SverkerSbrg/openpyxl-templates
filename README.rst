@@ -2,9 +2,16 @@
 Welcome to openpyxl-templates!
 ==============================
 
-Openpyxl-templates is an extension to `openpyxl <http://openpyxl.readthedocs.io/>`_ which is intended to simplify reading and writing of excelfiles by formalizing their structure. The package is built around the ``TemplatedWorkbook``, a class-based representation of an excel file. The workook is described by a number of ``TemplatedWorksheet``s which describe the individual sheets. The TemplatedWorksheet is an abstract base class for classbased representations of individual sheets. It provides an interface for reading and writing (including styleing) sheets.
+Openpyxl-templates is an extention to `openpyxl <http://openpyxl.readthedocs.io/>`_ which simplifies reading and writing excelfiles by formalizing their structure into templates. The package has two main components:
 
-The ``TableSheet`` is (currently) the only implementation of the TemplatedSheet. It allows the developer to easily read and write Data Tables.
+    1. The ``TemplatedWorkbook`` which describe the excelfile
+    2. The ``TemplatedSheets`` which describe the individual sheets within the file
+
+The package is build for developers to be able to implement their own templates but also provides one useful templated sheet. The ``TableSheet`` which makes it significantly easier to read and write data from excel data tabels such as this one:
+
+.. image:: examples/fruit_lovers.png
+
+The TableSheet provides an easy way of defining columns and handles both styling and conversion to and from excel. See :ref:`quick_start <quick start>` for a demo.
 
 Github
     https://github.com/SverkerSbrg/openpyxl-templates
@@ -17,6 +24,9 @@ pypi
 
 openpyxl
     https://openpyxl.readthedocs.io/en/default/
+
+
+If you have any questions or ideas regarding the package feel free to reach out to me via GitHub.
 
 
 .. warning::
