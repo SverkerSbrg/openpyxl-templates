@@ -5,7 +5,7 @@ Quick start
 Installation
 ------------
 
-Install openpyxl-templates using pypi.
+Install openpyxl-templates using pypi::
 
     pip install openpyxl-templates
 
@@ -24,13 +24,13 @@ To write create an instance of your templated workbook, supply data to the sheet
 .. literalinclude:: examples/simple_usage.py
     :lines: 31-38
 
-The templated workbook and its templated sheets handles all formatting. Here is the persons sheet created by the code above.
+Openpyxl-templates handles all formatting. The code above produces the following excel sheet.
 
 .. image:: examples/fruit_lovers.png
 
 Reading
 -------
-To read use the filename argument of your workbook template.
+To utilize the openpyxl-templates to read from an existing excel file, initialize your TemplatedWorkbook with a file (or a path to a file). Using the read method or simply itterating over a sheet will give you access to the data as namedtupels.
 
 .. literalinclude:: examples/simple_usage.py
     :lines: 44-47
