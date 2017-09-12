@@ -69,11 +69,11 @@ class TemplatedWorksheet(metaclass=OrderedType):
         except ValueError:
             raise WorksheetDoesNotExist(self)
 
-    def write(self, *args, overwrite=True, **kwargs):
+    def write(self, data):
         raise NotImplemented()
         # 'self.sheet_template.write(self.worksheet, self.templated_workbook.styles, data)
 
-    def read(self, exception_policy):
+    def read(self):
         raise NotImplemented()
 
     def remove(self):
