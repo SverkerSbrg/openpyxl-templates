@@ -11,7 +11,7 @@ To manage all named styles within a TemplatedWorkbook openpyxl-templates uses th
  - Using a common colleciton of styles for all TemplatedSheets makes it easier to avoid duplicated styles and name conflicts
  - The StyleSet accepts ``ExtendedStyle`` s as well as NamedStyles which enables inheritance between styles within the StyleSet
  - Styles will only be added to the excel file when they are needed allowing the developer to use a single StyleSet for multiple templates without having to worry about unused styles being included in the excel file.
- - Using NamedStyles offers significantly better performace compared to styling each cell individually when writing a large amout of data
+ - Using NamedStyles offers significantly better performance compared to styling each cell individually when writing a large amout of data
 
 -------------------
 Creating a StyleSet
@@ -41,6 +41,12 @@ if a name is declared multiple times the last declaration will take precedence m
 Accessing styles
 ----------------
 
+When you need to use a specific style just retrive it by name
+
+
+
+
+
 TODO
 
 .. _DefaultStyleSet:
@@ -56,6 +62,8 @@ Openpyxl-templates includes a ``DefaultStyleSet`` which is used as a fallback fo
 
 .. _ModifyDefaultStyleSet:
 
-If you which to modify the DefaultStyle you can easily replace any or all of the styles it contains by passing them as arguments to the constructor. Below we change the fill color of all headers by replacing the "Header" ExtendedStyle.
+If you which to modify the DefaultStyle you can easily replace any or all of the styles it contains by passing them as arguments to the constructor. Below we utilize the heavy usage of ExtendedStyles in the DefaultStyleSet to change of all styles.
 
- TODO: Example
+
+.. literalinclude:: examples/styles.py
+    :lines: 60-67

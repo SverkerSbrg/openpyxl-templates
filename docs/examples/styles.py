@@ -1,6 +1,6 @@
 from openpyxl.styles import NamedStyle, Font
 
-from openpyxl_templates.styles import StyleSet, ExtendedStyle
+from openpyxl_templates.styles import StyleSet, ExtendedStyle, DefaultStyleSet
 from openpyxl_templates.utils import SolidFill
 
 demo_style = StyleSet(
@@ -56,5 +56,11 @@ bad_example = StyleSet(
     )
 )
 
-
-# Bad the font will be replaced entierly
+new_font_default_style_set = DefaultStyleSet(
+    NamedStyle(  # Replace the existing "Default" font with a new one.
+        name="Default",
+        font=Font(
+            name="Arial",
+        )
+    )
+)
