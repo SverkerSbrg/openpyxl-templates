@@ -34,17 +34,27 @@ The font, border, alignment and fill arguments of the NamedStyle are supplied as
 .. literalinclude:: examples/styles.py
     :lines: 41-56
 
-if a name is declared multiple times the last declaration will take precedence making it easy to modify an existing StyleSet. One common usage for this is to modify the DefaultStyleSet. Which is demonstrated below.
+if a name is declared multiple times the last declaration will take precedence making it easy to modify an existing StyleSet. One common usage for this is to modify the DefaultStyleSet. Which is demonstrated :ref:`ModifyDefaultStyleSet <below>`.
 
 
-'''''''''''''''
+----------------
+Accessing styles
+----------------
+
+TODO
+
+.. _DefaultStyleSet:
+
+---------------
 DefaultStyleSet
-'''''''''''''''
+---------------
 
 Openpyxl-templates includes a ``DefaultStyleSet`` which is used as a fallback for all TemplatedWorkbook. Many of the styles it declares (or their names) are required by the ``TableSheet``. The DefaultStyleSet is defined like this
 
 .. literalinclude:: ../openpyxl_templates/styles.py
     :lines: 114-184
+
+.. _ModifyDefaultStyleSet:
 
 If you which to modify the DefaultStyle you can easily replace any or all of the styles it contains by passing them as arguments to the constructor. Below we change the fill color of all headers by replacing the "Header" ExtendedStyle.
 
