@@ -1,3 +1,4 @@
+from collections import deque
 from itertools import chain
 
 from openpyxl.styles import NamedStyle
@@ -5,9 +6,12 @@ from openpyxl.styles import NamedStyle
 from openpyxl_templates.utils import SolidFill
 
 
-class _Colors:
-    DARK_RED = "5d1738"
-    DARK_BLUE = "1a1f43"
+DEFAULT_ACCENT_COLOR = "1a1f43"
+
+
+class ParentForExtendedStyleNotFound(KeyError):
+    def __init__(self, extended_style):
+        super().__init__("Base style '%s' for ExtendedStyle '%s' not found." % (extended_style.base, extended_style.name))
 
 
 class ExtendedStyle(dict):
@@ -24,15 +28,15 @@ class ExtendedStyle(dict):
         self.number_format = number_format
         self.protection = protection
 
-    def extend(self, named_style):
+    def extend(self, parent):
         return NamedStyle(
             name=self.name,
-            number_format=self.number_format or named_style.number_format,
-            fill=self.fill or named_style.fill,
-            font=self._extend_serializable(named_style.font, self.font),
-            border=self._extend_serializable(named_style.border, self.border),
-            alignment=self._extend_serializable(named_style.alignment, self.alignment),
-            protection=self._extend_serializable(named_style.protection, self.protection),
+            number_format=self.number_format or parent.number_format,
+            fill=self.fill or parent.fill,
+            font=self._extend_serializable(parent.font, self.font),
+            border=self._extend_serializable(parent.border, self.border),
+            alignment=self._extend_serializable(parent.alignment, self.alignment),
+            protection=self._extend_serializable(parent.protection, self.protection),
         )
 
     @staticmethod
@@ -41,7 +45,7 @@ class ExtendedStyle(dict):
         if object_class == type(update):
             return update
         kwargs = {}
-        object_class = type(serializable)
+
         for attr in chain(object_class.__attrs__, object_class.__elements__):
             kwargs[attr] = getattr(serializable, attr)
 
@@ -56,8 +60,30 @@ class StyleSet:
     def __init__(self, *styles):
         self._styles = {}
 
+        # Make names are only present once and that redeclared names takes precedence
+        styles = {style.name: style for style in styles}.values()
+
+        extended_styles = {}
+
         for style in styles:
-            self.add(style)
+            if isinstance(style, NamedStyle):
+                self._add(style)
+            elif isinstance(style, ExtendedStyle):
+                extended_styles[style.name] = style
+            else:
+                raise TypeError("Unknown type")
+
+        que = deque(extended_styles.values())
+
+        while que:
+            extended_style = que.pop()
+
+            if extended_style.base in self:
+                self._add(extended_style)
+            elif extended_style.base in extended_styles:
+                que.appendleft(extended_style)
+            else:
+                raise ParentForExtendedStyleNotFound(extended_style)
 
     def __getitem__(self, item):
         return self._styles[item]
@@ -65,8 +91,11 @@ class StyleSet:
     def __contains__(self, key):
         return key in self._styles
 
-    def add(self, style):
+    def _add(self, style):
         if issubclass(type(style), ExtendedStyle):
+            if style.base not in self:
+                raise ParentForExtendedStyleNotFound(style)
+
             style = style.extend(self[style.base])
 
         if not isinstance(style, NamedStyle):
@@ -83,7 +112,7 @@ class StyleSet:
 
 
 class DefaultStyleSet(StyleSet):
-    def __init__(self, accent_color=_Colors.DARK_BLUE):
+    def __init__(self, *styles):
         super().__init__(
             NamedStyle(
                 name="Default",
@@ -106,7 +135,7 @@ class DefaultStyleSet(StyleSet):
             ExtendedStyle(
                 base="Default",
                 name="Header",
-                font={"bold": True, "color": "FFFFFFFF"}, fill=SolidFill(accent_color)
+                font={"bold": True, "color": "FFFFFFFF"}, fill=SolidFill(DEFAULT_ACCENT_COLOR)
             ),
             ExtendedStyle(
                 base="Header",
@@ -150,5 +179,6 @@ class DefaultStyleSet(StyleSet):
                 name="Row, time",
                 alignment={"horizontal": "center"},
                 number_format="h:mm"
-            )
+            ),
+            *styles
         )

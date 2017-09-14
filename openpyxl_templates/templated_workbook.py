@@ -75,7 +75,9 @@ class TemplatedWorkbook(metaclass=OrderedType):
 
         self.sort_worksheets()
 
-        return self.workbook.save(filename)
+        self.workbook.save(filename)
+
+        return filename
 
     def sort_worksheets(self):
         order = {}

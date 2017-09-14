@@ -1,14 +1,14 @@
 import random
 from datetime import date, datetime
 from enum import Enum
-from os.path import dirname
+from os.path import dirname, join
 
-
-from openpyxl_templates.style import DefaultStyleSet, _Colors
+from openpyxl_templates.styles import DefaultStyleSet, ExtendedStyle
 from openpyxl_templates.table_sheet.columns import TableColumn, ChoiceColumn, DateColumn, CharColumn, TextColumn, \
     BoolColumn, IntColumn, FloatColumn, DatetimeColumn, TimeColumn, FormulaColumn
 from openpyxl_templates.table_sheet.table_sheet import TableSheet
 from openpyxl_templates.templated_workbook import TemplatedWorkbook
+from openpyxl_templates.utils import SolidFill
 
 DIR = dirname(__file__)
 
@@ -141,12 +141,12 @@ class DemoWorkbook(TemplatedWorkbook):
 
 
 if __name__ == "__main__":
-    workbook = DemoWorkbook(template_styles=DefaultStyleSet(accent_color=_Colors.DARK_RED))
+    workbook = DemoWorkbook(template_styles=DefaultStyleSet(ExtendedStyle(base="Default", name="Header", fill=SolidFill("FF0000"))))
     workbook.column_demo.write(objects=list(demo_objects(100)), title="Column demo")
     workbook.persons.write(objects=persons, title="Persons")
 
-    workbook.save("demo.xlsx")
+    filename = workbook.save(join(dirname(__file__), "demo.xlsx"))
 
-    wb = DemoWorkbook(filename="demo_20170624_191326.xlsx")
+    wb = DemoWorkbook(filename=filename)
     print(list(wb.persons.read()))
 
