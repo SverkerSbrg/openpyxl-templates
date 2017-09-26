@@ -93,26 +93,20 @@ class TableSheet(TemplatedWorksheet):
     _last_data_cell = None
     _first_header_cell = None
     _last_header_cell = None
+    _row_class = None
+    _column_index = 1
 
-    def __init__(self, sheetname=None, active=None, table_name=None):
+    def __init__(self, sheetname=None, active=None, table_name=None, columns=None):
         super().__init__(sheetname=sheetname, active=active)
 
         self.table_name = table_name or self.table_name
 
         self.columns = []
-        index = 1
         for object_attribute, column in self._items.items():
-            if not column._object_attribute:
-                column._object_attribute = object_attribute
-            column.column_index = index
-            index += 1
+            self.add_column(column, object_attribute=object_attribute)
 
-            self.columns.append(column)
-
-        self._row_class = namedtuple(
-            "%sRow" % self.__class__.__name__,
-            (column.object_attribute for column in self.columns)
-        )
+        for column in columns or []:
+            self.add_column(column)
 
         self._validate()
 
@@ -134,6 +128,16 @@ class TableSheet(TemplatedWorksheet):
             last_column = self.columns[-1]
             if last_column.hidden or last_column.group:
                 raise CannotHideOrGroupLastColumn()
+
+    def add_column(self, column, object_attribute=None, ):
+        column.column_index = self._column_index
+        self._column_index += 1
+
+        if object_attribute and not column._object_attribute:
+            column._object_attribute = object_attribute
+
+        self.columns.append(column)
+        self._row_class = None
 
     def write(self, objects=None, title=None, description=None, preserve=False):
         if not self.empty:
@@ -302,7 +306,7 @@ class TableSheet(TemplatedWorksheet):
         return self.create_object(data)
 
     def create_object(self, data):
-        return self._row_class(*data.values())
+        return self.row_class(*data.values())
 
     def generate_table_name(self):
         table_name = self.sheetname
@@ -315,6 +319,15 @@ class TableSheet(TemplatedWorksheet):
     @property
     def headers(self):
         return (column.header for column in self.columns)
+
+    @property
+    def row_class(self):
+        if not self._row_class:
+            self._row_class = namedtuple(
+                "%sRow" % self.__class__.__name__,
+                (column.object_attribute for column in self.columns)
+            )
+        return self._row_class
 
     def __iter__(self):
         return self.read()

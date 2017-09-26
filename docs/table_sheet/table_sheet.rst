@@ -50,6 +50,12 @@ All columns must have a header and there must not be any duplicated headers with
 
 An instance of a column should never be used on multiple sheets.
 
+
+TODO: Dynamic columns
+^^^^^^^^^^^^^^^^^^^^^
+TODO: Describe the ability to pass additional columns to __init__ via ``columns=[...]``
+
+
 Writing
 -------
 Simple usage

@@ -43,19 +43,15 @@ class TemplatedWorkbook(metaclass=OrderedType):
         self.template_styles = template_styles or self.template_styles or DefaultStyleSet()
 
         self.templated_sheets = []
-        for attr, templated_sheet in self._items.items():
-            if not templated_sheet._sheetname:
-                templated_sheet._sheetname = attr
+        for sheetname, templated_sheet in self._items.items():
+            self.add_templated_sheet(templated_sheet, sheetname=sheetname, add_to_self=False)
 
-            templated_sheet.workbook = self.workbook
-            templated_sheet.template_styles = self.template_styles
-            self.templated_sheets.append(templated_sheet)
+        self._validate()
 
-        self.validate()
-
-    def validate(self):
+    def _validate(self):
         self._check_unique_sheetnames()
         self._check_only_one_active()
+
 
     def _check_unique_sheetnames(self):
         if len(set(templated_sheet.sheetname for templated_sheet in self.templated_sheets)) < len(self.templated_sheets):
@@ -64,6 +60,17 @@ class TemplatedWorkbook(metaclass=OrderedType):
     def _check_only_one_active(self):
         if len(tuple(sheet for sheet in self.templated_sheets if sheet.active)) > 1:
             raise MultipleActiveSheets(self)
+
+    def add_templated_sheet(self, sheet, sheetname=None, add_to_self=True):
+        if sheetname and not sheet._sheetname:
+            sheet._sheetname = sheetname
+
+        sheet.workbook = self.workbook
+        sheet.template_styles = self.template_styles
+        self.templated_sheets.append(sheet)
+
+        if add_to_self and not hasattr(self, sheet._sheetname):
+            setattr(self, sheet.sheetname, self)
 
     def remove_all_sheets(self):
         for sheetname in self.workbook.sheetnames:
