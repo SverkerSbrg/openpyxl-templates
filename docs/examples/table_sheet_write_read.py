@@ -54,8 +54,11 @@ wb.demo_sheet1.write(
 
 # ------------------- Styling -------------------
 class PrettyDemoSheet(TableSheet):
-    title_style = "Bold & red, title"
-    description_style = "Extra tiny, description"
+    def __init__(self):
+        super().__init__(
+            title_style="Bold & red, title",
+            description_style="Extra tiny, description"
+        )
 
     column1 = CharColumn()
     column2 = IntColumn()

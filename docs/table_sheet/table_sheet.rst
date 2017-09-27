@@ -90,7 +90,7 @@ The TableSheet has two style attributes:
     * ``description_style`` - Name of the style to be used for the description, defaults to *"Description"*
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 55-61
+    :lines: 56-64
 
 Styling of columns done on the columns themselves.
 
@@ -113,7 +113,7 @@ Simple usage
 The ``read`` method does two things. First it will verify the format of the file by looking for the header row. If the headers cannot be found a en exception will be raised. Once the headers has been found all subsequent rows in the excel will be treated as data and parsed to `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_ automatically after the columns has transformed the data from excel to python.
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 65-67
+    :lines: 68-70
 
 Iterate directly
 ^^^^^^^^^^^^^^^^
@@ -121,7 +121,7 @@ Iterate directly
 The TableSheet can also be used as an iterator directly
 
 .. literalinclude:: ../examples/table_sheet_write_read.py
-    :lines: 71-72
+    :lines: 74-75
 
 Exception handling
 ^^^^^^^^^^^^^^^^^^
