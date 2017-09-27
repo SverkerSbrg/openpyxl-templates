@@ -192,7 +192,9 @@ class CharColumn(TableColumn):
 
 
 class TextColumn(CharColumn):
-    row_style = "Row, text"
+    def __init__(self, **kwargs):
+        kwargs.setdefault("row_style", "Row, text")
+        super().__init__(**kwargs)
 
 
 class UnableToParseException(CellException):
@@ -255,8 +257,10 @@ class UnableToParseFloat(UnableToParseException):
 
 
 class FloatColumn(TableColumn):
-    row_style = "Row, decimal"
-    default_value = 0.0
+    def __init__(self, **kwargs):
+        kwargs.setdefault("row_style", "Row, decimal")
+        kwargs.setdefault("default_value", 0.0)
+        super().__init__(**kwargs)
 
     def to_excel(self, value):
         return float(value)
@@ -283,13 +287,14 @@ class RoundingRequired(CellException):
 
 
 class IntColumn(FloatColumn):
-    row_style = "Row, integer"
-    default_value = 0
     round_value = Typed("round_value", expected_type=bool, value=True)
 
     def __init__(self, round_value=None, **kwargs):
-        self.round_value = round_value
+        kwargs.setdefault("row_style", "Row, integer")
+        kwargs.setdefault("default_value", 0)
         super().__init__(**kwargs)
+
+        self.round_value = round_value
 
     def to_excel(self, value):
         return int(value)
@@ -355,8 +360,10 @@ class UnableToParseDatetime(UnableToParseException):
 class DatetimeColumn(TableColumn):
     SECONDS_PER_DAY = 24 * 60 * 60
 
-    row_style = "Row, date"
-    header_style = "Header, center"
+    def __init__(self, **kwargs):
+        kwargs.setdefault("row_style", "Row, date")
+        kwargs.setdefault("header_style", "Header, center")
+        super().__init__(**kwargs)
 
     def from_excel(self, cell):
         value = cell.value
@@ -397,7 +404,9 @@ class UnableToParseTime(UnableToParseException):
 
 
 class TimeColumn(DatetimeColumn):
-    row_style = "Row, time"
+    def __init__(self, **kwargs):
+        kwargs.setdefault("row_style", "Row, time")
+        super().__init__(**kwargs)
 
     def from_excel(self, cell):
         if type(cell.value) == time:
