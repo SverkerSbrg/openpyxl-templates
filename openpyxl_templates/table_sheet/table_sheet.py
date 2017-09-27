@@ -56,6 +56,16 @@ class HeadersNotFound(TableSheetException):
         )
 
 
+class MultipleFrozenColumns(TableSheetException):
+    def __init__(self, table_sheet, frozen_columns):
+        super().__init__(
+            "TableSheet '%s' has more than one frozen columns. Frozen columns: %s" % (
+                type(table_sheet).__name__,
+                ", ".join(column.header for column in frozen_columns)
+            )
+        )
+
+
 class CannotHideOrGroupLastColumn(TableSheetException):
     def __init__(self):
         super().__init__(
@@ -96,10 +106,18 @@ class TableSheet(TemplatedWorksheet):
     _row_class = None
     _column_index = 1
 
-    def __init__(self, sheetname=None, active=None, table_name=None, columns=None):
+    def __init__(self, sheetname=None, active=None, table_name=None, title_style=None, format_as_table=None,
+                 freeze_header=None, hide_excess_columns=None, look_for_headers=None, exception_policy=None,
+                 columns=None):
         super().__init__(sheetname=sheetname, active=active)
 
         self.table_name = table_name or self.table_name
+        self.title_style = title_style or self.title_style
+        self.format_as_table = format_as_table if format_as_table is not None else self.format_as_table
+        self.freeze_header = freeze_header if freeze_header is not None else self.freeze_header
+        self.hide_excess_columns = hide_excess_columns if hide_excess_columns is not None else self.hide_excess_columns
+        self.look_for_headers = look_for_headers if look_for_headers is not None else self.look_for_headers
+        self.exception_policy = self.exception_policy if exception_policy is not None else self.exception_policy
 
         self.columns = []
         for object_attribute, column in self._items.items():
@@ -113,6 +131,7 @@ class TableSheet(TemplatedWorksheet):
     def _validate(self):
         self._check_atleast_one_column()
         self._check_unique_column_headers()
+        self._check_max_one_frozen_column()
         self._check_last_column_not_hidden_or_grouped_if_hide_excess_columns()
 
     def _check_atleast_one_column(self):
@@ -122,6 +141,11 @@ class TableSheet(TemplatedWorksheet):
     def _check_unique_column_headers(self):
         if len(set(column.header for column in self.columns)) < len(self.columns):
             raise ColumnHeadersNotUnique(self.columns)
+
+    def _check_max_one_frozen_column(self):
+        frozen_columns = tuple(column for column in self.columns if column.freeze)
+        if len(frozen_columns) > 1:
+            raise MultipleFrozenColumns(self, frozen_columns)
 
     def _check_last_column_not_hidden_or_grouped_if_hide_excess_columns(self):
         if self.hide_excess_columns:
@@ -249,7 +273,17 @@ class TableSheet(TemplatedWorksheet):
             )
 
         if self.freeze_header:
-            worksheet.freeze_panes = self._first_data_cell or self._first_header_cell
+            row = (self._first_data_cell or self._first_header_cell).row
+        else:
+            row = 1
+
+        try:
+            column = next(column.column_index for column in self.columns if column.freeze)
+        except StopIteration:
+            column = 0
+
+        if row + column > 1:
+            worksheet.freeze_panes = worksheet["%s%s" % (get_column_letter(column+1), row)]
 
         if self.hide_excess_columns:
             for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):

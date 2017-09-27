@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from weakref import WeakKeyDictionary
 
 from openpyxl.styles import Border
 from openpyxl.styles import Side
@@ -40,8 +41,11 @@ class Typed(object):
     expected_types = type(None)
     allow_none = False
 
+    _values = None
+
     def __init__(self, name, value=None, expected_type=None, expected_types=None, allow_none=None):
         self.name = name
+        self._values = WeakKeyDictionary()
 
         if expected_types is not None:
             self.expected_types = expected_types
@@ -65,14 +69,14 @@ class Typed(object):
                     self.name, type(value), str(self.expected_types)))
 
         if instance is not None:
-            instance.__dict__[self.name] = value
+            self._values[instance] = value
         else:
             self.default_value = value
 
     def __get__(self, instance, owner):
         if instance is not None:
             try:
-                return instance.__dict__[self.name]
+                return self._values[instance]
             except KeyError:
                 pass
         return self.default_value

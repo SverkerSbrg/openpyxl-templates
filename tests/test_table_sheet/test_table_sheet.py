@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from openpyxl_templates.table_sheet.columns import TableColumn
 from openpyxl_templates.table_sheet.table_sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns, \
-    CannotHideOrGroupLastColumn, HeadersNotFound
+    CannotHideOrGroupLastColumn, HeadersNotFound, MultipleFrozenColumns
 from openpyxl_templates.templated_workbook import TemplatedWorkbook
 from tests.utils import FakeCells
 
@@ -32,6 +32,12 @@ class FakeTableSheet(TableSheet):
 
     def read(self, *args, **kwargs):
         return tuple(super().read(*args, **kwargs))
+
+data = (
+    ("Col1Row1", "Col2Row1", "Col3Row1"),
+    ("Col1Row2", "Col2Row2", "Col3Row2"),
+    ("Col1Row3", "Col2Row3", "Col3Row3")
+)
 
 
 class TemplatedSheetTestCase(TestCase):
@@ -79,6 +85,14 @@ class TemplatedSheetTestCase(TestCase):
         with self.assertRaises(CannotHideOrGroupLastColumn):
             CannotGroupLastColumnSheet(sheetname="CannotGroupLastColumnSheet")
 
+    def test_multiple_columns(self):
+        class MultipleFrozenColumnsSheet(TableSheet):
+            column1 = TableColumn(freeze=True)
+            column2 = TableColumn(freeze=True)
+
+        with self.assertRaises(MultipleFrozenColumns):
+            MultipleFrozenColumnsSheet(sheetname="MultipleFrozenColumnsSheet")
+
     def test_read(self):
         obj = self.sheet.object_from_row(FakeCells("1", "2", "3"))
         self.assertEqual(obj.column1, "1")
@@ -120,12 +134,6 @@ class TemplatedSheetTestCase(TestCase):
         self.assertFalse(sheet.read())
 
     def test_write_tuple(self):
-        data = (
-            ("Col2Row1", "Col2Row1", "Col3Row1"),
-            ("Col2Row2", "Col2Row2", "Col3Row2"),
-            ("Col2Row3", "Col2Row3", "Col3Row3")
-        )
-
         wb = TestTemplatedWorkbook()
 
         wb.sheet1.write(objects=data)
@@ -143,11 +151,6 @@ class TemplatedSheetTestCase(TestCase):
 
     def test_preserve(self):
         wb = TestTemplatedWorkbook()
-        data = (
-            ("Col1Row1", "Col2Row1", "Col3Row1"),
-            ("Col1Row2", "Col2Row2", "Col3Row2"),
-            ("Col1Row3", "Col2Row3", "Col3Row3")
-        )
 
         wb.sheet1.write(data[0:1])
         wb.sheet1.write(data[1:], preserve=True)
@@ -157,17 +160,71 @@ class TemplatedSheetTestCase(TestCase):
 
     def test_do_not_preserve(self):
         wb = TestTemplatedWorkbook()
-        data = (
-            ("Col1Row1", "Col2Row1", "Col3Row1"),
-            ("Col1Row2", "Col2Row2", "Col3Row2"),
-            ("Col1Row3", "Col2Row3", "Col3Row3")
-        )
 
         wb.sheet1.write(data[0:1])
         wb.sheet1.write(data[1:], preserve=False)
 
         result = tuple(tuple(row) for row in wb.sheet1.read())
         self.assertEqual(data[1:], result)
+
+    def test_no_freeze_pane(self):
+        class NotFrozenWorkbook(TemplatedWorkbook):
+            sheet1 = TestTemplatedSheet(freeze_header=False)
+
+        wb = NotFrozenWorkbook()
+        wb.sheet1.write(data)
+        self.assertIsNone(wb.sheet1.worksheet.freeze_panes)
+
+    def test_freeze_header(self):
+        class FreezeHeaderWorkbook(TemplatedWorkbook):
+            sheet1 = TestTemplatedSheet(freeze_header=True)
+            sheet2 = TestTemplatedSheet(freeze_header=True)
+
+        wb = FreezeHeaderWorkbook()
+        wb.sheet1.write(data)
+
+        self.assertEqual(wb.sheet1.worksheet.freeze_panes, "A2")
+
+        wb.sheet2.write(data, title="Title")
+        self.assertEqual(wb.sheet2.worksheet.freeze_panes, "A3")
+
+    def test_freeze_column(self):
+        class FreezeFirstSheet(TableSheet):
+            column1 = TableColumn(header="column1", freeze=True)
+            column2 = TableColumn(header="column2")
+            column3 = TableColumn(header="column3")
+
+        class FreezeSecondSheet(TableSheet):
+            column1 = TableColumn(header="column1")
+            column2 = TableColumn(header="column2", freeze=True)
+            column3 = TableColumn(header="column3")
+
+        class FreezeThirdSheet(TableSheet):
+            column1 = TableColumn(header="column1")
+            column2 = TableColumn(header="column2")
+            column3 = TableColumn(header="column3", freeze=True)
+
+        class FrozenColumnWorkbook(TemplatedWorkbook):
+            sheet1 = FreezeFirstSheet(freeze_header=False)
+            sheet2 = FreezeSecondSheet(freeze_header=False)
+            sheet3 = FreezeThirdSheet(freeze_header=False)
+
+        wb = FrozenColumnWorkbook()
+        for sheet, cell in ((wb.sheet1, "B1"), (wb.sheet2, "C1"), (wb.sheet3, "D1")):
+            sheet.write(data)
+            self.assertEqual(cell, sheet.worksheet.freeze_panes)
+
+        class FrozenColumnAndHeaderWorkbook(TemplatedWorkbook):
+            sheet1 = FreezeFirstSheet(freeze_header=True)
+            sheet2 = FreezeSecondSheet(freeze_header=True)
+            sheet3 = FreezeThirdSheet(freeze_header=True)
+
+        wb = FrozenColumnAndHeaderWorkbook()
+        for sheet, cell in ((wb.sheet1, "B2"), (wb.sheet2, "C2"), (wb.sheet3, "D2")):
+            sheet.write(data)
+            self.assertEqual(cell, sheet.worksheet.freeze_panes)
+
+
 
 
 

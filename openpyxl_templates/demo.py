@@ -124,7 +124,7 @@ class ColumnDemoSheet(TableSheet):
     table_name = "ColumnDemo"
 
     char = CharColumn(header="CharColumn")
-    text = TextColumn(header="TextColumn")
+    text = TextColumn(header="TextColumn", freeze=True)
     boolean = BoolColumn(header="BoolColumn")
     integer = IntColumn(header="IntColumn")
     float = FloatColumn(header="FloatColumn")

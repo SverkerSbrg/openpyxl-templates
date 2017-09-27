@@ -50,11 +50,13 @@ class TableColumn:
 
     header_style = Typed("header_style", expected_type=str, value="Header")
     row_style = Typed("row_style", expected_type=str, value="Row")
+    freeze = Typed("freeze", expected_type=bool, value=False)
 
     BLANK_VALUES = (None, "")
 
     def __init__(self, object_attribute=None, source=None, header=None, width=None, hidden=None, group=None,
-                 data_validation=None, default_value=None, allow_blank=None, header_style=None, row_style=None):
+                 data_validation=None, default_value=None, allow_blank=None, header_style=None, row_style=None,
+                 freeze=False):
         self._header = header if header is not None else self._header
         self.width = width if width is not None else self.width
         self.hidden = hidden if hidden is not None else self.hidden
@@ -69,6 +71,8 @@ class TableColumn:
 
         self.header_style = header_style if header_style is not None else self.header_style
         self.row_style = row_style if row_style is not None else self.row_style
+
+        self.freeze = freeze
 
     def get_value_from_object(self, object):
         if isinstance(object, (list, tuple)):
