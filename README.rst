@@ -11,7 +11,7 @@ The package is build for developers to be able to implement their own templates 
 
 .. image:: examples/fruit_lovers.png
 
-The TableSheet provides an easy way of defining columns and handles both styling and conversion to and from excel. See :ref:`quick start <quick_start>` for a demo.
+The TableSheet provides an easy way of defining columns and handles both styling and conversion to and from excel. See quickstart for a demo.
 
 Github
     https://github.com/SverkerSbrg/openpyxl-templates
