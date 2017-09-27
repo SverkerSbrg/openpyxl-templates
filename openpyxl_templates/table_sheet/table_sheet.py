@@ -83,7 +83,7 @@ class TableSheetExceptionPolicy(Enum):
 class TableSheet(TemplatedWorksheet):
     item_class = TableColumn
 
-    table_name = Typed("table_name", expected_type=str, allow_none=True)
+    _table_name = Typed("table_name", expected_type=str, allow_none=True)
 
     title_style = Typed("title_style", expected_type=str, value="Title")
     description_style = Typed("description_style", expected_type=str, value="Description")
@@ -111,13 +111,13 @@ class TableSheet(TemplatedWorksheet):
                  columns=None):
         super().__init__(sheetname=sheetname, active=active)
 
-        self.table_name = table_name or self.table_name
-        self.title_style = title_style or self.title_style
-        self.format_as_table = format_as_table if format_as_table is not None else self.format_as_table
-        self.freeze_header = freeze_header if freeze_header is not None else self.freeze_header
-        self.hide_excess_columns = hide_excess_columns if hide_excess_columns is not None else self.hide_excess_columns
-        self.look_for_headers = look_for_headers if look_for_headers is not None else self.look_for_headers
-        self.exception_policy = self.exception_policy if exception_policy is not None else self.exception_policy
+        self._table_name = table_name
+        self.title_style = title_style
+        self.format_as_table = format_as_table
+        self.freeze_header = freeze_header
+        self.hide_excess_columns = hide_excess_columns
+        self.look_for_headers = look_for_headers
+        self.exception_policy = exception_policy
 
         self.columns = []
         for object_attribute, column in self._items.items():
@@ -268,7 +268,7 @@ class TableSheet(TemplatedWorksheet):
                         self._first_header_cell.coordinate,
                         self._last_data_cell.coordinate if self._last_data_cell else self._last_header_cell.coordinate
                     ),
-                    displayName=self.table_name or self.generate_table_name(),
+                    displayName=self.table_name,
                 )
             )
 
@@ -342,12 +342,18 @@ class TableSheet(TemplatedWorksheet):
     def create_object(self, data):
         return self.row_class(*data.values())
 
-    def generate_table_name(self):
-        table_name = self.sheetname
-        # Remove invalid characters
-        table_name = re.sub('[^0-9a-zA-Z_]', '', table_name)
-        # Remove leading characters until we find a letter or underscore
-        table_name = re.sub('^[^a-zA-Z_]+', '', table_name)
+    @property
+    def table_name(self):
+        if not self._table_name:
+            table_name = self.sheetname
+            # Remove invalid characters
+            table_name = re.sub('[^0-9a-zA-Z_]', '', table_name)
+            # Remove leading characters until we find a letter or underscore
+            self._table_name = re.sub('^[^a-zA-Z_]+', '', table_name)
+
+        return self._table_name
+
+
         return table_name
 
     @property

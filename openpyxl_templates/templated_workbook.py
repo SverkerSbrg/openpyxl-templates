@@ -35,12 +35,13 @@ class TemplatedWorkbook(metaclass=OrderedType):
     #         return load_workbook(file)
     #     return super().__new__(cls)
 
-    def __init__(self, filename=None, template_styles=None):
+    def __init__(self, filename=None, template_styles=None, timestamp=None):
         super().__init__()
 
         self.workbook = load_workbook(filename=filename) if filename else Workbook()
 
-        self.template_styles = template_styles or self.template_styles or DefaultStyleSet()
+        self.template_styles = template_styles or DefaultStyleSet()
+        self.timestamp = timestamp
 
         self.templated_sheets = []
         for sheetname, templated_sheet in self._items.items():
@@ -51,7 +52,6 @@ class TemplatedWorkbook(metaclass=OrderedType):
     def _validate(self):
         self._check_unique_sheetnames()
         self._check_only_one_active()
-
 
     def _check_unique_sheetnames(self):
         if len(set(templated_sheet.sheetname for templated_sheet in self.templated_sheets)) < len(self.templated_sheets):

@@ -38,12 +38,9 @@ def ColoredBorders(color, top=True, right=True, bottom=True, left=True):
 class Typed(object):
     name = None
     default_value = None
-    expected_types = type(None)
-    allow_none = False
-
     _values = None
 
-    def __init__(self, name, value=None, expected_type=None, expected_types=None, allow_none=None):
+    def __init__(self, name, value=None, expected_type=None, expected_types=None, allow_none=False):
         self.name = name
         self._values = WeakKeyDictionary()
 
@@ -54,24 +51,38 @@ class Typed(object):
 
         if expected_type is not None:
             self.expected_types.append(expected_type)
-        if allow_none is not None:
-            self.allow_none = allow_none
+        self.allow_none = allow_none
         self.__doc__ = "Values must be of type {0}".format(self.expected_types)
 
         if value is not None:
-            self.__set__(None, value)
+            self.validate(value)
+            self.default_value = value
 
     def __set__(self, instance, value):
-        is_subclass = bool([True for t in self.expected_types if issubclass(type(value), t)])
-        if not type(value) in self.expected_types and not is_subclass:
-            if not self.allow_none or (self.allow_none and value is not None):
-                raise TypeError("Attribute '%s' got type '%s' expected one of '%s'" % (
-                    self.name, type(value), str(self.expected_types)))
+        if instance is None:
+            return
 
-        if instance is not None:
-            self._values[instance] = value
-        else:
-            self.default_value = value
+        self.validate(value)
+
+        if value is None:
+            try:
+                del self._values[instance]
+            except KeyError:
+                pass
+            return
+
+        self._values[instance] = value
+
+    def validate(self, value):
+        if value is None:
+            if self.allow_none or self.default_value is not None:
+                return
+            raise ValueError("Attribute '%s' must not be None" % self.name)
+
+        is_subclass = bool([True for t in self.expected_types if issubclass(type(value), t)])
+        if not (type(value) in self.expected_types or is_subclass):
+            raise TypeError("Attribute '%s' got type '%s' expected one of '%s'" % (
+                self.name, type(value), str(self.expected_types)))
 
     def __get__(self, instance, owner):
         if instance is not None:

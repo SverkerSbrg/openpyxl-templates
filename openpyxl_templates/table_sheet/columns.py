@@ -57,20 +57,21 @@ class TableColumn:
     def __init__(self, object_attribute=None, source=None, header=None, width=None, hidden=None, group=None,
                  data_validation=None, default_value=None, allow_blank=None, header_style=None, row_style=None,
                  freeze=False):
-        self._header = header if header is not None else self._header
-        self.width = width if width is not None else self.width
-        self.hidden = hidden if hidden is not None else self.hidden
-        self.group = group if group is not None else self.group
-        self.data_validation = data_validation if data_validation is not None else self.data_validation
 
-        self.default = default_value if default_value is not None else self.default
-        self.allow_blank = allow_blank if allow_blank is not None else self.allow_blank
+        self._header = header
+        self.width = width
+        self.hidden = hidden
+        self.group = group
+        self.data_validation = data_validation
 
-        self._object_attribute = object_attribute if object_attribute is not None else self._object_attribute
-        self.source = source if source is not None else self.source
+        self.default = default_value
+        self.allow_blank = allow_blank
 
-        self.header_style = header_style if header_style is not None else self.header_style
-        self.row_style = row_style if row_style is not None else self.row_style
+        self._object_attribute = object_attribute
+        self.source = source
+
+        self.header_style = header_style
+        self.row_style = row_style
 
         self.freeze = freeze
 
@@ -169,7 +170,7 @@ class CharColumn(TableColumn):
     def __init__(self, max_length=None, **kwargs):
         super().__init__(**kwargs)
 
-        self.max_length = max_length if max_length is not None else self.max_length
+        self.max_length = max_length
 
     def from_excel(self, cell):
         value = cell.value
@@ -208,17 +209,17 @@ class UnableToParseBool(UnableToParseException):
 
 
 class BoolColumn(TableColumn):
-    excel_true = "TRUE"
-    excel_false = "FALSE"
+    excel_true = Typed(name="excel_true", value="TRUE", expected_types=(str, int, float))
+    excel_false = Typed(name="excel_false", value="FALSE", expected_types=(str, int, float))
 
     list_validation = Typed("list_validation", expected_type=bool, value=True)
     strict = Typed("strict", expected_type=bool, value=False)
 
     def __init__(self, excel_true=None, excel_false=None, list_validation=None, strict=None, **kwargs):
-        self.excel_true = excel_true if excel_true is not None else self.excel_true
-        self.excel_false = excel_false if excel_false is not None else self.excel_false
-        self.list_validation = list_validation if list_validation is not None else self.list_validation
-        self.strict = strict if strict is not None else self.strict
+        self.excel_true = excel_true
+        self.excel_false = excel_false
+        self.list_validation = list_validation
+        self.strict = strict
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
@@ -287,7 +288,7 @@ class IntColumn(FloatColumn):
     round_value = Typed("round_value", expected_type=bool, value=True)
 
     def __init__(self, round_value=None, **kwargs):
-        self.round_value = round_value if round_value is not None else self.round_value
+        self.round_value = round_value
         super().__init__(**kwargs)
 
     def to_excel(self, value):
@@ -316,17 +317,17 @@ class IllegalChoice(CellException):
 
 
 class ChoiceColumn(TableColumn):
-    choices = None  # ((internal_value, excel_value),)
-    list_validation = True
+    list_validation = Typed(name="list_validation", value=True, expected_type=bool)
 
+    choices = None  # ((internal_value, excel_value),)
     to_excel_map = None
     from_excel_map = None
 
     def __init__(self, choices=None, list_validation=None, **kwargs):
         super().__init__(**kwargs)
 
-        self.choices = choices if choices is not None else self.choices
-        self.list_validation = list_validation if list_validation is not None else self.list_validation
+        self.choices = choices
+        self.list_validation = list_validation
 
         self.to_excel_map = {internal: excel for excel, internal in self.choices}
         self.from_excel_map = {excel: internal for excel, internal in self.choices}
@@ -429,10 +430,10 @@ class NoFormula(OpenpyxlTemplateException):
 
 
 class FormulaColumn(TableColumn):
-    formula = None
+    formula = Typed(name="formula", expected_type=str, allow_none=True)
 
     def __init__(self, formula=None, **kwargs):
-        self.formula = formula if formula is not None else self.formula
+        self.formula = formula
 
         if not self.formula:
             raise NoFormula()

@@ -1,3 +1,6 @@
+.. image:: https://badge.fury.io/py/openpyxl-templates.svg
+    :target: https://badge.fury.io/py/openpyxl-templates
+
 ==============================
 Welcome to openpyxl-templates!
 ==============================
