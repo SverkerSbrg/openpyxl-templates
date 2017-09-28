@@ -64,14 +64,17 @@ persons = (
     )
 )
 
+
 class SexColumn(ChoiceColumn):
-    hidden = False
-    choices = (
-        ("Male", Sexes.MALE),
-        ("Female", Sexes.FEMALE),
-        ("Other", Sexes.OTHER)
-    )
-    add_list_validation = True
+    def __init__(self, **kwargs):
+        super().__init__(
+            choices=(
+                (Sexes.MALE, "Male"),
+                (Sexes.FEMALE, "Female"),
+                (Sexes.OTHER, "Other")
+            ),
+            **kwargs
+        )
 
 
 class TemplatedPersonsSheet(TableSheet):

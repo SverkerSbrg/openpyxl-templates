@@ -4,7 +4,7 @@ from openpyxl_templates.table_sheet.columns import TableColumn
 from openpyxl_templates.table_sheet.table_sheet import TableSheet, ColumnHeadersNotUnique, NoTableColumns, \
     CannotHideOrGroupLastColumn, HeadersNotFound, MultipleFrozenColumns
 from openpyxl_templates.templated_workbook import TemplatedWorkbook
-from tests.utils import FakeCells
+from openpyxl_templates.utils import FakeCells
 
 
 class TestTemplatedSheet(TableSheet):
