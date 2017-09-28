@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta, time
 from types import FunctionType
-from typing import Iterable
 
+from collections import Iterable
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
