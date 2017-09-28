@@ -16,9 +16,9 @@ class PersonSheet(TableSheet):
     last_name = CharColumn()
     date_of_birth = DateColumn()
     favorite_fruit = ChoiceColumn(choices=(
-        ("Apple", Fruits.apple),
-        ("Banana", Fruits.banana),
-        ("Orange", Fruits.orange),
+        (Fruits.apple, "Apple"),
+        (Fruits.banana, "Banana"),
+        (Fruits.orange, "Orange"),
     ))
 
 

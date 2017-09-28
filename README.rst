@@ -1,6 +1,9 @@
 .. image:: https://badge.fury.io/py/openpyxl-templates.svg
     :target: https://badge.fury.io/py/openpyxl-templates
 
+.. image:: https://readthedocs.org/projects/openpyxl-templates/badge/?version=latest
+:target: http://openpyxl-templates.readthedocs.io/en/latest/?badge=latest
+
 ==============================
 Welcome to openpyxl-templates!
 ==============================

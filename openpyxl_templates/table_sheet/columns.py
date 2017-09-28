@@ -1,12 +1,13 @@
 from datetime import date, datetime, timedelta, time
 from types import FunctionType
+from typing import Iterable
 
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateException, CellException
-from openpyxl_templates.utils import Typed
+from openpyxl_templates.utils import Typed, FakeCell
 
 
 class ColumnIndexNotSet(OpenpyxlTemplateException):
@@ -47,6 +48,7 @@ class TableColumn:
     # Reading/writing properties
     default = None  # internal value not excel
     allow_blank = Typed("allow_blank", expected_type=bool, value=True)
+    ignore_forced_text = Typed("ignore_forced_text", expected_type=bool, value=True)
 
     header_style = Typed("header_style", expected_type=str, value="Header")
     row_style = Typed("row_style", expected_type=str, value="Row")
@@ -55,7 +57,7 @@ class TableColumn:
     BLANK_VALUES = (None, "")
 
     def __init__(self, object_attribute=None, source=None, header=None, width=None, hidden=None, group=None,
-                 data_validation=None, default_value=None, allow_blank=None, header_style=None, row_style=None,
+                 data_validation=None, default=None, allow_blank=None, ignore_forced_text=None, header_style=None, row_style=None,
                  freeze=False):
 
         self._header = header
@@ -64,8 +66,14 @@ class TableColumn:
         self.group = group
         self.data_validation = data_validation
 
-        self.default = default_value
+        self.default = default
+
+        # Make sure the default value is valid
+        if self.default is not None:
+            self._to_excel(default)
+
         self.allow_blank = allow_blank
+        self.ignore_forced_text = ignore_forced_text
 
         self._object_attribute = object_attribute
         self.source = source
@@ -84,25 +92,33 @@ class TableColumn:
 
         return getattr(object, self.object_attribute, None)
 
+    def _to_excel(self, value):
+        if value in self.BLANK_VALUES:
+            if self.default is not None:
+                return self.to_excel(self.default)
+            if self.allow_blank:
+                return None
+            raise BlankNotAllowed(WriteOnlyCell())
+
+        return self.to_excel(value)
+
     def to_excel(self, value):
         return value
 
-    def from_excel(self, cell):
-        return cell.value
+    def _from_excel(self, cell):
+        value = cell.value
+        if self.ignore_forced_text and isinstance(value, str) and value.startswith("'"):
+            value = value[1:]
 
-    def to_excel_with_blank_check(self, value):
-        if value is None:
-            if self.allow_blank:
-                return None
-            raise BlankNotAllowed()
-        return self.to_excel(value)
-
-    def from_excel_with_blank_check(self, cell):
-        if cell.value in self.BLANK_VALUES:
+        if value in self.BLANK_VALUES:
             if not self.allow_blank:
                 raise BlankNotAllowed(cell=cell)
             return self.default
-        return self.from_excel(cell)
+
+        return self.from_excel(cell, value)
+
+    def from_excel(self, cell, value):
+        return value
 
     def prepare_worksheet(self, worksheet):
         if self.data_validation:
@@ -116,7 +132,7 @@ class TableColumn:
     def create_cell(self, worksheet, value=None):
         cell = WriteOnlyCell(
             worksheet,
-            value=self.to_excel_with_blank_check(value or self.default)
+            value=self._to_excel(value or self.default)
         )
         cell.style = self.row_style
         return cell
@@ -163,7 +179,6 @@ class StringToLong(CellException):
         )
 
 
-# TODO: Add ability to force text, Eg. append and strip "'"
 class CharColumn(TableColumn):
     max_length = Typed("max_length", expected_type=int, allow_none=True)
 
@@ -172,8 +187,7 @@ class CharColumn(TableColumn):
 
         self.max_length = max_length
 
-    def from_excel(self, cell):
-        value = cell.value
+    def from_excel(self, cell, value):
         if value is None:
             return None
 
@@ -200,9 +214,13 @@ class TextColumn(CharColumn):
 class UnableToParseException(CellException):
     type = None
 
-    def __init__(self, cell):
+    def __init__(self, cell=None, value=None):
+        if cell:
+            message = "Unable to convert value '%s' of cell '%s' to %s." % (cell.value, cell.coordinate, self.type)
+        else:
+            message = "Unable to convert value '%s' to '%s'" % (value, self.type)
         super().__init__(
-            "Unable to convert value '%s' of cell '%s' to %s." % (cell.value, cell.coordinate, self.type)
+            message
         )
 
 
@@ -223,20 +241,18 @@ class BoolColumn(TableColumn):
         self.list_validation = list_validation
         self.strict = strict
 
+        super().__init__(**kwargs)
+
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
                 type="list",
                 formula1="\"%s\"" % ",".join((self.excel_true, self.excel_false))
             )
 
-        super().__init__(**kwargs)
-
     def to_excel(self, value):
         return self.excel_true if value else self.excel_false
 
-    def from_excel(self, cell):
-        value = cell.value
-
+    def from_excel(self, cell, value):
         if isinstance(value, bool):
             return value
 
@@ -259,19 +275,20 @@ class UnableToParseFloat(UnableToParseException):
 class FloatColumn(TableColumn):
     def __init__(self, **kwargs):
         kwargs.setdefault("row_style", "Row, decimal")
-        kwargs.setdefault("default_value", 0.0)
+        kwargs.setdefault("default", 0.0)
         super().__init__(**kwargs)
 
     def to_excel(self, value):
-        return float(value)
-
-    def from_excel(self, cell):
-        value = cell.value
-
         try:
             return float(value)
         except (ValueError, TypeError):
-            raise UnableToParseFloat(cell)
+            raise UnableToParseFloat(value=value)
+
+    def from_excel(self, cell, value):
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            raise UnableToParseFloat(cell=cell)
 
 
 class UnableToParseInt(UnableToParseException):
@@ -291,21 +308,28 @@ class IntColumn(FloatColumn):
 
     def __init__(self, round_value=None, **kwargs):
         kwargs.setdefault("row_style", "Row, integer")
-        kwargs.setdefault("default_value", 0)
+        kwargs.setdefault("default", 0)
         super().__init__(**kwargs)
 
         self.round_value = round_value
 
     def to_excel(self, value):
-        return int(value)
-
-    def from_excel(self, cell):
-        value = cell.value
         try:
             f = float(value)
-            i = int(value)
+            i = round(f, 0)
             if i != f and not self.round_value:
-                raise RoundingRequired(cell)
+                raise RoundingRequired(FakeCell(value=value))
+            return int(i)
+        except (ValueError, TypeError):
+            raise UnableToParseInt(value=value)
+
+    def from_excel(self, cell, value):
+        try:
+            f = float(value)
+            i = round(f, 0)
+            if i != f and not self.round_value:
+                raise RoundingRequired(cell=cell)
+            return int(i)
         except (ValueError, TypeError):
             raise UnableToParseInt(cell)
 
@@ -324,33 +348,46 @@ class IllegalChoice(CellException):
 class ChoiceColumn(TableColumn):
     list_validation = Typed(name="list_validation", value=True, expected_type=bool)
 
-    choices = None  # ((internal_value, excel_value),)
+    choices = Typed(name="choices", expected_type=Iterable)
     to_excel_map = None
     from_excel_map = None
 
     def __init__(self, choices=None, list_validation=None, **kwargs):
-        super().__init__(**kwargs)
 
         self.choices = choices
         self.list_validation = list_validation
 
-        self.to_excel_map = {internal: excel for excel, internal in self.choices}
-        self.from_excel_map = {excel: internal for excel, internal in self.choices}
+        self.to_excel_map = {internal: excel for internal, excel in self.choices}
+        self.from_excel_map = {excel: internal for internal, excel in self.choices}
+
+        # Setup maps before super().__init__() to validation of default value.
+        super().__init__(**kwargs)
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
                 type="list",
-                formula1="\"%s\"" % ",".join('%s' % str(excel) for excel, internal in self.choices)
+                formula1="\"%s\"" % ",".join('%s' % str(excel) for internal, excel in self.choices)
             )
 
     def to_excel(self, value):
+        if value not in self.to_excel_map:
+            if self.default is not None:
+                value = self.default
+
+            if value not in self.to_excel_map:
+                raise IllegalChoice(FakeCell(value), tuple(self.to_excel_map.keys()))
+
         return self.to_excel_map[value]
 
-    def from_excel(self, cell):
-        try:
-            return self.from_excel_map[cell.value]
-        except KeyError:
-            raise IllegalChoice(cell, tuple(self.from_excel_map.keys()))
+    def from_excel(self, cell, value):
+        if value not in self.from_excel_map:
+            if self.default is not None:
+                return self.default
+
+            if value not in self.from_excel_map:
+                raise IllegalChoice(cell, tuple(self.from_excel_map.keys()))
+
+        return self.from_excel_map[value]
 
 
 class UnableToParseDatetime(UnableToParseException):
@@ -365,23 +402,39 @@ class DatetimeColumn(TableColumn):
         kwargs.setdefault("header_style", "Header, center")
         super().__init__(**kwargs)
 
-    def from_excel(self, cell):
-        value = cell.value
-
+    def from_excel(self, cell, value):
         if isinstance(value, (datetime, date)):
             return value
 
-        if type in (int, float):
-            return datetime(year=1900, month=1, day=1) + timedelta(days=value - 2)
+        if type(value) in (int, float):
+            # Excel dates start at 1900-01-01
+            if value < 1:
+                raise UnableToParseDatetime(cell)
+
+            result = datetime(year=1900, month=1, day=1) + timedelta(days=value - 2)
+
+            # Excel incorrectly assumes 1900 to be a leap year.
+            if value < 61:
+                result += timedelta(days=1)
+            return result
 
         raise UnableToParseDatetime(cell)
 
     def to_excel(self, value):
         if type(value) == date:
             value = datetime.combine(value, time.min)
+        if not isinstance(value, datetime):
+            raise UnableToParseDatetime(value=value)
 
         delta = (value - datetime(year=1900, month=1, day=1))
-        return delta.days + delta.seconds / self.SECONDS_PER_DAY + 2
+        value = delta.days + delta.seconds / self.SECONDS_PER_DAY + 2
+
+        # Excel incorrectly assumes 1900 to be a leap year.
+        if value < 61:
+            if value < 1:
+                raise UnableToParseDatetime(value=value)
+            value -= 1
+        return value
 
 
 class UnableToParseDate(UnableToParseException):
@@ -389,9 +442,9 @@ class UnableToParseDate(UnableToParseException):
 
 
 class DateColumn(DatetimeColumn):
-    def from_excel(self, cell):
+    def from_excel(self, cell, value):
         try:
-            return super().from_excel(cell).date()
+            return super().from_excel(cell, value).date()
         except UnableToParseDatetime:
             raise UnableToParseDate(cell=cell)
 
@@ -408,12 +461,12 @@ class TimeColumn(DatetimeColumn):
         kwargs.setdefault("row_style", "Row, time")
         super().__init__(**kwargs)
 
-    def from_excel(self, cell):
-        if type(cell.value) == time:
-            return cell.value
+    def from_excel(self, cell, value):
+        if type(value) == time:
+            return value
 
         try:
-            return super().from_excel(cell).time()
+            return super().from_excel(cell, value).time()
         except UnableToParseDatetime:
             raise UnableToParseTime(cell)
 

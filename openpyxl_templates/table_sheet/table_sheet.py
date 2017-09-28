@@ -328,7 +328,7 @@ class TableSheet(TemplatedWorksheet):
         cell_exceptions = []
         for cell, column in zip(chain(row, repeat(None)), self.columns):
             try:
-                data[column.object_attribute] = column.from_excel_with_blank_check(cell)
+                data[column.object_attribute] = column._from_excel(cell)
             except CellException as e:
                 if exception_policy <= TableSheetExceptionPolicy.RaiseCellException:
                     raise e
