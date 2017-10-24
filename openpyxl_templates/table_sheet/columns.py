@@ -390,6 +390,12 @@ class ChoiceColumn(TableColumn):
         return self.from_excel_map[value]
 
 
+class FortnumChoiceColumn(ChoiceColumn):
+    def __init__(self, fortnum, **kwargs):
+        kwargs["choices"] = ((f, str(f)) for f in fortnum)
+        super().__init__(**kwargs)
+
+
 class UnableToParseDatetime(UnableToParseException):
     type = "datetime"
 

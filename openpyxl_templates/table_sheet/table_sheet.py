@@ -340,7 +340,7 @@ class TableSheet(TemplatedWorksheet):
         return self.create_object(data)
 
     def create_object(self, data):
-        return self.row_class(*data.values())
+        return self.row_class(**data)
 
     @property
     def table_name(self):
