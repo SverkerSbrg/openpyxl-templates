@@ -106,13 +106,14 @@ class TableSheet(TemplatedWorksheet):
     _row_class = None
     _column_index = 1
 
-    def __init__(self, sheetname=None, active=None, table_name=None, title_style=None, format_as_table=None,
-                 freeze_header=None, hide_excess_columns=None, look_for_headers=None, exception_policy=None,
-                 columns=None):
+    def __init__(self, sheetname=None, active=None, table_name=None, title_style=None, description_style=None,
+                 format_as_table=None, freeze_header=None, hide_excess_columns=None, look_for_headers=None,
+                 exception_policy=None, columns=None):
         super().__init__(sheetname=sheetname, active=active)
 
         self._table_name = table_name
         self.title_style = title_style
+        self.description_style = description_style
         self.format_as_table = format_as_table
         self.freeze_header = freeze_header
         self.hide_excess_columns = hide_excess_columns
