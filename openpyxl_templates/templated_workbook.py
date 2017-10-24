@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from openpyxl import Workbook, load_workbook
+from openpyxl.writer.excel import save_virtual_workbook
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateException
 from openpyxl_templates.styles import DefaultStyleSet, StyleSet
@@ -89,6 +90,10 @@ class TemplatedWorkbook(metaclass=OrderedType):
         self.workbook.save(filename)
 
         return filename
+
+    def save_virtual_workbook(self):
+        self.sort_worksheets()
+        return save_virtual_workbook(self.workbook)
 
     def sort_worksheets(self):
         order = {}
