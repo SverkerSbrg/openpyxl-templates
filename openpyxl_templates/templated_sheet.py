@@ -93,4 +93,10 @@ class TemplatedWorksheet(metaclass=OrderedType):
     def sheetname(self, value):
         self._sheetname = value
 
+    def __str__(self):
+        return self._sheetname or self.__class__.__name__
+
+    def __repr__(self):
+        return str(self)
+
 

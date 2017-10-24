@@ -21,12 +21,12 @@ class TableSheetException(SheetException):
 class ColumnHeadersNotUnique(TableSheetException):
     def __init__(self, columns):
         counter = Counter(column.header for column in columns)
-        super().__init__("headers '%s' has been declared more then once in the same TableSheet" % tuple(
+        super().__init__("headers '%s' has been declared more then once in the same TableSheet" % str(tuple(
             header
             for (header, count)
             in counter.items()
             if count > 1
-        ))
+        )))
 
 
 class TempleteStyleNotFound(TableSheetException):

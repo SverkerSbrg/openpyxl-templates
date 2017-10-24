@@ -309,6 +309,15 @@ class ChoiceColumnTestCase(ColumnTestCase):
         with self.assertRaises(ValueError):
             column = ChoiceColumn()
 
+    def test_choices_as_generator(self):
+        column = ChoiceColumn(
+            choices=((value, value) for value in ("value1", "value2"))
+        )
+        self.assertEqual(
+            list(column.choices),
+            [("value1", "value1"), ("value2", "value2")]
+        )
+
 
 class DatetimeColumnTestCase(TableColumnTests):
     def setUp(self):

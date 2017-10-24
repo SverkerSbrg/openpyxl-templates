@@ -58,6 +58,16 @@ class TemplatedSheetTestCase(TestCase):
         with self.assertRaises(ColumnHeadersNotUnique):
             InvalidSheet(sheetname="invalid_sheet")
 
+    def test_column_headers_not_unique_multiple_conflicts(self):
+        class InvalidSheet(TableSheet):
+            column1 = TableColumn(header="header1")
+            column2 = TableColumn(header="header1")
+            column3 = TableColumn(header="header2")
+            column4 = TableColumn(header="header2")
+
+        with self.assertRaises(ColumnHeadersNotUnique):
+            InvalidSheet(sheetname="invalid_sheet")
+
     def test_set_column_index(self):
         self.assertEqual(self.sheet.column1.column_index, 1)
         self.assertEqual(self.sheet.column2.column_index, 2)
@@ -85,7 +95,7 @@ class TemplatedSheetTestCase(TestCase):
         with self.assertRaises(CannotHideOrGroupLastColumn):
             CannotGroupLastColumnSheet(sheetname="CannotGroupLastColumnSheet")
 
-    def test_multiple_columns(self):
+    def test_multiple_frozen_columns(self):
         class MultipleFrozenColumnsSheet(TableSheet):
             column1 = TableColumn(freeze=True)
             column2 = TableColumn(freeze=True)
