@@ -163,6 +163,8 @@ class TableSheet(TemplatedWorksheet):
         self.columns.append(column)
         self._row_class = None
 
+        return column
+
     def write(self, objects=None, title=None, description=None, preserve=False):
         if not self.empty:
             if preserve:

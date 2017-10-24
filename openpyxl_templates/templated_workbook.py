@@ -73,6 +73,8 @@ class TemplatedWorkbook(metaclass=OrderedType):
         sheet.template_styles = self.template_styles
         self.templated_sheets.append(sheet)
 
+        return sheet
+
         #TODO: Parse sheetname to an attribute? Or removing add to self all together?
         # if add_to_self:
         #     setattr(self, sheet.sheetname, sheet)
