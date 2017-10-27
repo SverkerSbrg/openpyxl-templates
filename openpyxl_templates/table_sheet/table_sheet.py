@@ -289,8 +289,12 @@ class TableSheet(TemplatedWorksheet):
             worksheet.freeze_panes = worksheet["%s%s" % (get_column_letter(column+1), row)]
 
         if self.hide_excess_columns:
-            for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):
-                worksheet.column_dimensions[get_column_letter(i)].hidden = True
+            worksheet.column_dimensions.group(
+                start=get_column_letter(len(self.columns) + 1),
+                end=get_column_letter(MAX_COLUMN_INDEX + 1),
+                outline_level=0,
+                hidden=True
+            )
 
     def read(self, exception_policy=None, look_for_headers=None):
         header_found = not (look_for_headers if look_for_headers is not None else self.look_for_headers)

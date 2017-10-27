@@ -150,6 +150,6 @@ if __name__ == "__main__":
 
     filename = workbook.save(join(dirname(__file__), "demo.xlsx"))
 
-    wb = DemoWorkbook(filename=filename)
+    wb = DemoWorkbook(file=filename)
     print(list(wb.persons.read()))
 
