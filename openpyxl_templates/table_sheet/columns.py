@@ -126,15 +126,17 @@ class TableColumn:
 
     def create_header(self, worksheet):
         header = WriteOnlyCell(ws=worksheet, value=self.header)
-        header.style = self.header_style
+        if self.header_style:
+            header.style = self.header_style
         return header
 
     def create_cell(self, worksheet, value=None):
         cell = WriteOnlyCell(
             worksheet,
-            value=self._to_excel(value or self.default)
+            value=self._to_excel(value if value is not None else self.default)
         )
-        cell.style = self.row_style
+        if self.row_style:
+            cell.style = self.row_style
         return cell
 
     def post_process_cell(self, worksheet, cell):

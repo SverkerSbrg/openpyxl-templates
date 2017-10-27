@@ -1,6 +1,10 @@
 from datetime import datetime
 from unittest import TestCase
 
+from openpyxl import Workbook
+
+from openpyxl_templates import TemplatedWorkbook
+from openpyxl_templates.table_sheet import TableSheet
 from openpyxl_templates.table_sheet.columns import TableColumn, ColumnIndexNotSet, BoolColumn, StringToLong, \
     CharColumn, UnableToParseBool, FloatColumn, BlankNotAllowed, UnableToParseFloat, IntColumn, RoundingRequired, \
     ChoiceColumn, IllegalChoice, DatetimeColumn, UnableToParseDatetime
@@ -158,6 +162,10 @@ class BooleanColumnTests(ColumnTestCase):
         ):
             self.assertFromExcel(excel, internal, column=column)
             self.assertToExcel(excel, internal, column=column)
+
+    def test_create_cell_only_use_default_on_None(self):
+        column = BoolColumn(object_attribute="test", row_style="")
+        self.assertEqual(column.create_cell(Workbook().active, False).value, column.excel_false)
 
 
 class FloatColumnTestCase(ColumnTestCase):
