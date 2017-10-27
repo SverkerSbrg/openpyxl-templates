@@ -3,6 +3,7 @@ from types import FunctionType
 
 from collections import Iterable
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.formatting import Rule
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -44,6 +45,7 @@ class TableColumn:
     hidden = Typed("hidden", expected_type=bool, value=False)
     group = Typed("group", expected_type=bool, value=False)
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
+    conditional_formatting = Typed("conditional_formatting", expected_type=Rule, allow_none=True)
 
     # Reading/writing properties
     default = None  # internal value not excel
@@ -57,14 +59,15 @@ class TableColumn:
     BLANK_VALUES = (None, "")
 
     def __init__(self, object_attribute=None, source=None, header=None, width=None, hidden=None, group=None,
-                 data_validation=None, default=None, allow_blank=None, ignore_forced_text=None, header_style=None, row_style=None,
-                 freeze=False):
+                 data_validation=None, conditional_formatting=None, default=None, allow_blank=None,
+                 ignore_forced_text=None, header_style=None, row_style=None, freeze=False):
 
         self._header = header
         self.width = width
         self.hidden = hidden
         self.group = group
         self.data_validation = data_validation
+        self.conditional_formatting = conditional_formatting
 
         self.default = default
 
@@ -140,13 +143,18 @@ class TableColumn:
         return cell
 
     def post_process_cell(self, worksheet, cell):
-        if self.data_validation:
-            self.data_validation.add(cell)
+        pass
 
-    def post_process_worksheet(self, worksheet):
+    def post_process_worksheet(self, worksheet, first_row, last_row, data_range):
         column_dimension = worksheet.column_dimensions[self.column_letter]
         column_dimension.hidden = self.hidden
         column_dimension.width = self.width
+
+        if self.data_validation:
+            self.data_validation.ranges.append(data_range)
+
+        if self.conditional_formatting:
+            worksheet.conditional_formatting.add(data_range, self.conditional_formatting)
 
     @property
     def header(self):

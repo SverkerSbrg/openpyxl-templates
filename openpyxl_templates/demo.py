@@ -3,6 +3,10 @@ from datetime import date, datetime
 from enum import Enum
 from os.path import dirname, join
 
+from openpyxl.formatting.rule import ColorScaleRule, Rule
+from openpyxl.styles import Font, PatternFill
+from openpyxl.styles.differential import DifferentialStyle
+
 from openpyxl_templates.styles import DefaultStyleSet, ExtendedStyle
 from openpyxl_templates.table_sheet.columns import TableColumn, ChoiceColumn, DateColumn, CharColumn, TextColumn, \
     BoolColumn, IntColumn, FloatColumn, DatetimeColumn, TimeColumn, FormulaColumn
@@ -123,12 +127,21 @@ def demo_objects(count=100):
         )
 
 
+bold_true = Rule(
+    type='expression',
+    dxf=DifferentialStyle(
+        font=Font(bold=True)
+    ),
+    formula=["$C3"]
+)
+
+
 class ColumnDemoSheet(TableSheet):
     table_name = "ColumnDemo"
 
     char = CharColumn(header="CharColumn")
     text = TextColumn(header="TextColumn", freeze=True)
-    boolean = BoolColumn(header="BoolColumn")
+    boolean = BoolColumn(header="BoolColumn", conditional_formatting=bold_true)
     integer = IntColumn(header="IntColumn")
     float = FloatColumn(header="FloatColumn")
     datetime = DatetimeColumn(header="DatetimeColumn")

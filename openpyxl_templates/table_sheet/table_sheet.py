@@ -261,8 +261,18 @@ class TableSheet(TemplatedWorksheet):
             self._last_data_cell = cells[-1]
 
     def post_process_worksheet(self, worksheet):
+        first_row = (self._first_data_cell or self._first_header_cell).row
+        last_row = (self._last_data_cell or self._first_header_cell).row
+
         for column in self.columns:
-            column.post_process_worksheet(worksheet)
+            column_letter = column.column_letter
+
+            column.post_process_worksheet(
+                worksheet,
+                first_row=first_row,
+                last_row=last_row,
+                data_range="%s%s:%s%s" % (column_letter, first_row, column_letter, last_row)
+            )
 
         if self.format_as_table:
             worksheet.add_table(
