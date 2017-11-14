@@ -201,8 +201,8 @@ class StringToLong(CellException):
 class CharColumn(TableColumn):
     max_length = Typed("max_length", expected_type=int, allow_none=True)
 
-    def __init__(self, max_length=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, header=None, max_length=None, **kwargs):
+        super().__init__(header=header, **kwargs)
 
         self.max_length = max_length
 
@@ -254,13 +254,13 @@ class BoolColumn(TableColumn):
     list_validation = Typed("list_validation", expected_type=bool, value=True)
     strict = Typed("strict", expected_type=bool, value=False)
 
-    def __init__(self, excel_true=None, excel_false=None, list_validation=None, strict=None, **kwargs):
+    def __init__(self, header=None,  excel_true=None, excel_false=None, list_validation=None, strict=None, **kwargs):
         self.excel_true = excel_true
         self.excel_false = excel_false
         self.list_validation = list_validation
         self.strict = strict
 
-        super().__init__(**kwargs)
+        super().__init__(header=header, **kwargs)
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
@@ -325,10 +325,10 @@ class RoundingRequired(CellException):
 class IntColumn(FloatColumn):
     round_value = Typed("round_value", expected_type=bool, value=True)
 
-    def __init__(self, round_value=None, **kwargs):
+    def __init__(self, header=None, round_value=None, **kwargs):
         kwargs.setdefault("row_style", "Row, integer")
         kwargs.setdefault("default", 0)
-        super().__init__(**kwargs)
+        super().__init__(header=None, **kwargs)
 
         self.round_value = round_value
 
@@ -371,7 +371,7 @@ class ChoiceColumn(TableColumn):
     to_excel_map = None
     from_excel_map = None
 
-    def __init__(self, choices=None, list_validation=None, **kwargs):
+    def __init__(self, header=None, choices=None, list_validation=None, **kwargs):
 
         self.choices = tuple(choices) if choices else None
         self.list_validation = list_validation
@@ -380,7 +380,7 @@ class ChoiceColumn(TableColumn):
         self.from_excel_map = {excel: internal for internal, excel in self.choices}
 
         # Setup maps before super().__init__() to validation of default value.
-        super().__init__(**kwargs)
+        super().__init__(header=header, **kwargs)
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
