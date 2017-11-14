@@ -331,7 +331,7 @@ class IntColumn(FloatColumn):
     def __init__(self, header=None, round_value=None, **kwargs):
         kwargs.setdefault("row_style", "Row, integer")
         kwargs.setdefault("default", 0)
-        super().__init__(header=None, **kwargs)
+        super().__init__(header=header, **kwargs)
 
         self.round_value = round_value
 
