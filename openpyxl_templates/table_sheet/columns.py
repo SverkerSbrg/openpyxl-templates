@@ -58,7 +58,7 @@ class TableColumn:
 
     BLANK_VALUES = (None, "")
 
-    def __init__(self, object_attribute=None, source=None, header=None, width=None, hidden=None, group=None,
+    def __init__(self, header=None, object_attribute=None, source=None, width=None, hidden=None, group=None,
                  data_validation=None, conditional_formatting=None, default=None, allow_blank=None,
                  ignore_forced_text=None, header_style=None, row_style=None, freeze=False):
 
