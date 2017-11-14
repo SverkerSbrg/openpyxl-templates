@@ -141,7 +141,7 @@ class ColumnDemoSheet(TableSheet):
 
     char = CharColumn(header="CharColumn")
     text = TextColumn(header="TextColumn", freeze=True)
-    boolean = BoolColumn(header="BoolColumn", conditional_formatting=bold_true)
+    boolean = BoolColumn(header="BoolColumn", row_style="Row, integer", conditional_formatting=bold_true)
     integer = IntColumn(header="IntColumn", group=True)
     float = FloatColumn(header="FloatColumn", group=True)
     datetime = DatetimeColumn(header="DatetimeColumn", group=True)

@@ -18,9 +18,12 @@ def _color(color):
 
 
 def SolidFill(hex_color):
+    color = _color(hex_color)
     fill = PatternFill(
         patternType=FILL_SOLID,
-        fgColor=_color(hex_color)
+        fgColor=color,
+        start_color=color,
+        end_color=color
     )
     return fill
 

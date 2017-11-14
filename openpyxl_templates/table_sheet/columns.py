@@ -248,8 +248,8 @@ class UnableToParseBool(UnableToParseException):
 
 
 class BoolColumn(TableColumn):
-    excel_true = Typed(name="excel_true", value="TRUE", expected_types=(str, int, float))
-    excel_false = Typed(name="excel_false", value="FALSE", expected_types=(str, int, float))
+    excel_true = Typed(name="excel_true", value=True, expected_types=(str, int, float, bool))
+    excel_false = Typed(name="excel_false", value=False, expected_types=(str, int, float, bool))
 
     list_validation = Typed("list_validation", expected_type=bool, value=True)
     strict = Typed("strict", expected_type=bool, value=False)
@@ -265,7 +265,10 @@ class BoolColumn(TableColumn):
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
                 type="list",
-                formula1="\"%s\"" % ",".join((self.excel_true, self.excel_false))
+                formula1="\"%s\"" % ",".join((
+                    str(self.excel_true if self.excel_true is not True else "TRUE"),
+                    str(self.excel_false if self.excel_false is not False else "FALSE")
+                ))
             )
 
     def to_excel(self, value):
