@@ -142,11 +142,11 @@ class ColumnDemoSheet(TableSheet):
     char = CharColumn(header="CharColumn")
     text = TextColumn(header="TextColumn", freeze=True)
     boolean = BoolColumn(header="BoolColumn", conditional_formatting=bold_true)
-    integer = IntColumn(header="IntColumn")
-    float = FloatColumn(header="FloatColumn")
-    datetime = DatetimeColumn(header="DatetimeColumn")
+    integer = IntColumn(header="IntColumn", group=True)
+    float = FloatColumn(header="FloatColumn", group=True)
+    datetime = DatetimeColumn(header="DatetimeColumn", group=True)
     date = DateColumn(header="DateColumn")
-    time = TimeColumn(header="TimeColumn")
+    time = TimeColumn(header="TimeColumn", group=True)
     formula = FormulaColumn(header="FormulaColumn", formula="=SUM(ColumnDemo[IntColumn])")
 
 

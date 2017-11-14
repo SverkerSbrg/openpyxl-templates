@@ -2,7 +2,7 @@ import re
 from collections import Counter, namedtuple
 from collections import OrderedDict
 from enum import Enum
-from itertools import chain, repeat
+from itertools import chain, repeat, groupby
 
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
@@ -285,18 +285,27 @@ class TableSheet(TemplatedWorksheet):
                 )
             )
 
+        # Freeze pane
         if self.freeze_header:
             row = (self._first_data_cell or self._first_header_cell).row
         else:
             row = 1
-
         try:
             column = next(column.column_index for column in self.columns if column.freeze)
         except StopIteration:
             column = 0
-
         if row + column > 1:
             worksheet.freeze_panes = worksheet["%s%s" % (get_column_letter(column+1), row)]
+
+        # Grouping
+        groups = groupby(self.columns, lambda col: col.group)
+        for columns in (list(columns) for group, columns in groups if group):
+            worksheet.column_dimensions.group(
+                start=columns[0].column_letter,
+                end=columns[-1].column_letter,
+                outline_level=1,
+                hidden=columns[0].hidden
+            )
 
         if self.hide_excess_columns:
             worksheet.column_dimensions.group(
@@ -369,9 +378,6 @@ class TableSheet(TemplatedWorksheet):
             self._table_name = re.sub('^[^a-zA-Z_]+', '', table_name)
 
         return self._table_name
-
-
-        return table_name
 
     @property
     def headers(self):

@@ -147,7 +147,10 @@ class TableColumn:
 
     def post_process_worksheet(self, worksheet, first_row, last_row, data_range):
         column_dimension = worksheet.column_dimensions[self.column_letter]
-        column_dimension.hidden = self.hidden
+
+        # Hiding of grouped columns is handled on worksheet level.
+        if not self.group:
+            column_dimension.hidden = self.hidden
         column_dimension.width = self.width
 
         if self.data_validation:
@@ -180,6 +183,12 @@ class TableColumn:
             raise ObjectAttributeNotSet(self)
 
         return self._object_attribute
+
+    def __str__(self):
+        return "%s(%s)" % (self.__class__.__name__, self._header or self._object_attribute or "")
+
+    def __repr__(self):
+        return str(self)
 
 
 class StringToLong(CellException):
