@@ -303,12 +303,12 @@ class TableSheet(TemplatedWorksheet):
                 try:
                     yield self.object_from_row(rows.__next__(), exception_policy=_exception_policy)
                 except CellExceptions as e:
-                    if _exception_policy <= TableSheetExceptionPolicy.RaiseRowException:
+                    if _exception_policy.value <= TableSheetExceptionPolicy.RaiseRowException.value:
                         raise e
                     else:
                         row_exceptions.append(e)
 
-                if row_exceptions and _exception_policy <= TableSheetExceptionPolicy.RaiseSheetException:
+                if row_exceptions and _exception_policy.value <= TableSheetExceptionPolicy.RaiseSheetException.value:
                     raise RowExceptions(row_exceptions)
         except StopIteration:
             pass
