@@ -1,12 +1,19 @@
 from unittest import TestCase
 
+from openpyxl_templates.table_sheet import TableSheet, TableColumn
 from openpyxl_templates.templated_workbook import TemplatedWorkbook, SheetnamesNotUnique, MultipleActiveSheets
-from tests.test_table_sheet.test_table_sheet import TestTemplatedSheet
+
+
+class TestTemplatedSheet(TableSheet):
+    column1 = TableColumn(header="column1")
+    column2 = TableColumn(header="column2")
+    column3 = TableColumn(header="column3")
 
 
 class TestTemplatedWorkbook(TemplatedWorkbook):
     sheet1 = TestTemplatedSheet(sheetname="Custom sheetname")
     sheet2 = TestTemplatedSheet()
+
 
 
 class TemplatedWorkbookTests(TestCase):
@@ -18,6 +25,17 @@ class TemplatedWorkbookTests(TestCase):
             [self.wb.sheet1, self.wb.sheet2],
             self.wb.templated_sheets
         )
+
+    def test_dynamic_templated_sheets(self):
+        sheet3 = TestTemplatedSheet(sheetname="Dynamic sheet")
+
+        wb = TestTemplatedWorkbook(templated_sheets=[sheet3,])
+
+        self.assertEqual(
+            [wb.sheet1, wb.sheet2, sheet3],
+            list(wb.templated_sheets)
+        )
+
 
     def test_templated_sheets_workbook(self):
         for sheet in self.wb.templated_sheets:

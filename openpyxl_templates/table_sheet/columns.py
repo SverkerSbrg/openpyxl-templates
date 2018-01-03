@@ -83,14 +83,14 @@ class TableColumn:
 
         self.freeze = freeze
 
-    def get_value_from_object(self, object):
-        if isinstance(object, (list, tuple)):
-            return object[self.column_index-1]
+    def get_value_from_object(self, obj):
+        if isinstance(obj, (list, tuple)):
+            return obj[self.column_index - 1]
 
-        if isinstance(object, dict):
-            return object[self.object_attribute]
+        if isinstance(obj, dict):
+            return obj[self.object_attribute]
 
-        return getattr(object, self.object_attribute, None)
+        return getattr(obj, self.object_attribute, None)
 
     def _to_excel(self, value):
         if value in self.BLANK_VALUES:
@@ -354,7 +354,7 @@ class ChoiceColumn(TableColumn):
 
     def __init__(self, choices=None, list_validation=None, **kwargs):
 
-        self.choices = choices
+        self.choices = tuple(choices) if choices else None
         self.list_validation = list_validation
 
         self.to_excel_map = {internal: excel for internal, excel in self.choices}
@@ -388,6 +388,12 @@ class ChoiceColumn(TableColumn):
                 raise IllegalChoice(cell, tuple(self.from_excel_map.keys()))
 
         return self.from_excel_map[value]
+
+
+class FortnumChoiceColumn(ChoiceColumn):
+    def __init__(self, fortnum, **kwargs):
+        kwargs["choices"] = ((f, str(f)) for f in fortnum)
+        super().__init__(**kwargs)
 
 
 class UnableToParseDatetime(UnableToParseException):

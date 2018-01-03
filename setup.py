@@ -16,9 +16,10 @@ import sys
 
 setup(
     name='openpyxl-templates',
-    version='0.1.12',
-    description='A wrapper around openpyxl to simplify reading and writing of tables.',
-    # long_description=io.open('README.rst', encoding='utf-8').read() + '\n\n' +
+    version='0.1.17',
+    description='Openpyxl-templates is an extention to openpyxl which simplifies reading '
+                'and writing excelfiles by formalizing their structure into templates.',
+    long_description=io.open('README.rst', encoding='utf-8').read(),
     #     io.open('HISTORY.rst', encoding='utf-8').read(),
     author='Sverker Sjöberg',
     url='https://github.com/SverkerSbrg/openpyxl-templates',
