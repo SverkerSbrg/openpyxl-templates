@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from openpyxl import Workbook, load_workbook
+from openpyxl.writer.excel import save_virtual_workbook
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateException
 from openpyxl_templates.styles import DefaultStyleSet, StyleSet
@@ -35,10 +36,10 @@ class TemplatedWorkbook(metaclass=OrderedType):
     #         return load_workbook(file)
     #     return super().__new__(cls)
 
-    def __init__(self, filename=None, template_styles=None, timestamp=None):
+    def __init__(self, file=None, template_styles=None, timestamp=None, templated_sheets=None):
         super().__init__()
 
-        self.workbook = load_workbook(filename=filename) if filename else Workbook()
+        self.workbook = load_workbook(filename=file) if file else Workbook()
 
         self.template_styles = template_styles or DefaultStyleSet()
         self.timestamp = timestamp
@@ -46,6 +47,9 @@ class TemplatedWorkbook(metaclass=OrderedType):
         self.templated_sheets = []
         for sheetname, templated_sheet in self._items.items():
             self.add_templated_sheet(templated_sheet, sheetname=sheetname, add_to_self=False)
+
+        for templated_sheet in templated_sheets or []:
+            self.add_templated_sheet(sheet=templated_sheet, sheetname=templated_sheet.sheetname, add_to_self=True)
 
         self._validate()
 
@@ -69,8 +73,11 @@ class TemplatedWorkbook(metaclass=OrderedType):
         sheet.template_styles = self.template_styles
         self.templated_sheets.append(sheet)
 
-        if add_to_self and not hasattr(self, sheet._sheetname):
-            setattr(self, sheet.sheetname, self)
+        return sheet
+
+        #TODO: Parse sheetname to an attribute? Or removing add to self all together?
+        # if add_to_self:
+        #     setattr(self, sheet.sheetname, sheet)
 
     def remove_all_sheets(self):
         for sheetname in self.workbook.sheetnames:
@@ -85,6 +92,10 @@ class TemplatedWorkbook(metaclass=OrderedType):
         self.workbook.save(filename)
 
         return filename
+
+    def save_virtual_workbook(self):
+        self.sort_worksheets()
+        return save_virtual_workbook(self.workbook)
 
     def sort_worksheets(self):
         order = {}

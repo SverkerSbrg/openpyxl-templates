@@ -21,12 +21,12 @@ class TableSheetException(SheetException):
 class ColumnHeadersNotUnique(TableSheetException):
     def __init__(self, columns):
         counter = Counter(column.header for column in columns)
-        super().__init__("headers '%s' has been declared more then once in the same TableSheet" % tuple(
+        super().__init__("headers '%s' has been declared more then once in the same TableSheet" % str(tuple(
             header
             for (header, count)
             in counter.items()
             if count > 1
-        ))
+        )))
 
 
 class TempleteStyleNotFound(TableSheetException):
@@ -163,6 +163,8 @@ class TableSheet(TemplatedWorksheet):
 
         self.columns.append(column)
         self._row_class = None
+
+        return column
 
     def write(self, objects=None, title=None, description=None, preserve=False):
         if not self.empty:
@@ -304,12 +306,12 @@ class TableSheet(TemplatedWorksheet):
                 try:
                     yield self.object_from_row(rows.__next__(), exception_policy=_exception_policy)
                 except CellExceptions as e:
-                    if _exception_policy <= TableSheetExceptionPolicy.RaiseRowException:
+                    if _exception_policy.value <= TableSheetExceptionPolicy.RaiseRowException.value:
                         raise e
                     else:
                         row_exceptions.append(e)
 
-                if row_exceptions and _exception_policy <= TableSheetExceptionPolicy.RaiseSheetException:
+                if row_exceptions and _exception_policy.value <= TableSheetExceptionPolicy.RaiseSheetException.value:
                     raise RowExceptions(row_exceptions)
         except StopIteration:
             pass
@@ -341,7 +343,7 @@ class TableSheet(TemplatedWorksheet):
         return self.create_object(data)
 
     def create_object(self, data):
-        return self.row_class(*data.values())
+        return self.row_class(**data)
 
     @property
     def table_name(self):
