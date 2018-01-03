@@ -355,7 +355,7 @@ class TableSheet(TemplatedWorksheet):
             try:
                 data[column.object_attribute] = column._from_excel(cell)
             except CellException as e:
-                if exception_policy <= TableSheetExceptionPolicy.RaiseCellException:
+                if exception_policy.value <= TableSheetExceptionPolicy.RaiseCellException.value:
                     raise e
                 else:
                     cell_exceptions.append(e)
