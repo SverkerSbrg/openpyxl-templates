@@ -144,8 +144,7 @@ class DefaultStyleSet(StyleSet):
             ),
             ExtendedStyle(
                 base="Default",
-                name="Row",
-                protection={"locked": False}
+                name="Row"
             ),
             ExtendedStyle(
                 base="Row",

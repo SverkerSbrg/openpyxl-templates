@@ -11,12 +11,14 @@ import sys
 # To create destribution
 # pip install wheel
 # Use cmd
+# Check rst
+# python setup.py check --restructuredtext
 # python setup.py bdist_wheel
 # twine upload dist/openpyxl_templates-X.X.X-py2.py3-none-any.whl
 
 setup(
     name='openpyxl-templates',
-    version='0.1.17',
+    version='0.1.21',
     description='Openpyxl-templates is an extention to openpyxl which simplifies reading '
                 'and writing excelfiles by formalizing their structure into templates.',
     long_description=io.open('README.rst', encoding='utf-8').read(),
@@ -24,10 +26,11 @@ setup(
     author='Sverker Sjöberg',
     url='https://github.com/SverkerSbrg/openpyxl-templates',
     license='MIT',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests', 'docs']),
     zip_safe=False,
     install_requires=[
-        "openpyxl"
+        "openpyxl",
+        "fortnum"
     ],
     include_package_data=True,
     classifiers=[

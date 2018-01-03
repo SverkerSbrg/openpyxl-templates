@@ -3,6 +3,10 @@ from datetime import date, datetime
 from enum import Enum
 from os.path import dirname, join
 
+from openpyxl.formatting.rule import ColorScaleRule, Rule
+from openpyxl.styles import Font, PatternFill
+from openpyxl.styles.differential import DifferentialStyle
+
 from openpyxl_templates.styles import DefaultStyleSet, ExtendedStyle
 from openpyxl_templates.table_sheet.columns import TableColumn, ChoiceColumn, DateColumn, CharColumn, TextColumn, \
     BoolColumn, IntColumn, FloatColumn, DatetimeColumn, TimeColumn, FormulaColumn
@@ -123,17 +127,26 @@ def demo_objects(count=100):
         )
 
 
+bold_true = Rule(
+    type='expression',
+    dxf=DifferentialStyle(
+        font=Font(bold=True)
+    ),
+    formula=["$C3"]
+)
+
+
 class ColumnDemoSheet(TableSheet):
     table_name = "ColumnDemo"
 
     char = CharColumn(header="CharColumn")
     text = TextColumn(header="TextColumn", freeze=True)
-    boolean = BoolColumn(header="BoolColumn")
-    integer = IntColumn(header="IntColumn")
-    float = FloatColumn(header="FloatColumn")
-    datetime = DatetimeColumn(header="DatetimeColumn")
+    boolean = BoolColumn(header="BoolColumn", row_style="Row, integer", conditional_formatting=bold_true)
+    integer = IntColumn(header="IntColumn", group=True)
+    float = FloatColumn(header="FloatColumn", group=True)
+    datetime = DatetimeColumn(header="DatetimeColumn", group=True)
     date = DateColumn(header="DateColumn")
-    time = TimeColumn(header="TimeColumn")
+    time = TimeColumn(header="TimeColumn", group=True)
     formula = FormulaColumn(header="FormulaColumn", formula="=SUM(ColumnDemo[IntColumn])")
 
 
@@ -150,6 +163,6 @@ if __name__ == "__main__":
 
     filename = workbook.save(join(dirname(__file__), "demo.xlsx"))
 
-    wb = DemoWorkbook(filename=filename)
+    wb = DemoWorkbook(file=filename)
     print(list(wb.persons.read()))
 

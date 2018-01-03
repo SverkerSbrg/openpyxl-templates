@@ -2,7 +2,7 @@ import re
 from collections import Counter, namedtuple
 from collections import OrderedDict
 from enum import Enum
-from itertools import chain, repeat
+from itertools import chain, repeat, groupby
 
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
@@ -261,8 +261,18 @@ class TableSheet(TemplatedWorksheet):
             self._last_data_cell = cells[-1]
 
     def post_process_worksheet(self, worksheet):
+        first_row = (self._first_data_cell or self._first_header_cell).row
+        last_row = (self._last_data_cell or self._first_header_cell).row
+
         for column in self.columns:
-            column.post_process_worksheet(worksheet)
+            column_letter = column.column_letter
+
+            column.post_process_worksheet(
+                worksheet,
+                first_row=first_row,
+                last_row=last_row,
+                data_range="%s%s:%s%s" % (column_letter, first_row, column_letter, last_row)
+            )
 
         if self.format_as_table:
             worksheet.add_table(
@@ -275,22 +285,35 @@ class TableSheet(TemplatedWorksheet):
                 )
             )
 
+        # Freeze pane
         if self.freeze_header:
             row = (self._first_data_cell or self._first_header_cell).row
         else:
             row = 1
-
         try:
             column = next(column.column_index for column in self.columns if column.freeze)
         except StopIteration:
             column = 0
-
         if row + column > 1:
             worksheet.freeze_panes = worksheet["%s%s" % (get_column_letter(column+1), row)]
 
+        # Grouping
+        groups = groupby(self.columns, lambda col: col.group)
+        for columns in (list(columns) for group, columns in groups if group):
+            worksheet.column_dimensions.group(
+                start=columns[0].column_letter,
+                end=columns[-1].column_letter,
+                outline_level=1,
+                hidden=columns[0].hidden
+            )
+
         if self.hide_excess_columns:
-            for i in range(len(self.columns) + 1, MAX_COLUMN_INDEX + 1):
-                worksheet.column_dimensions[get_column_letter(i)].hidden = True
+            worksheet.column_dimensions.group(
+                start=get_column_letter(len(self.columns) + 1),
+                end=get_column_letter(MAX_COLUMN_INDEX + 1),
+                outline_level=0,
+                hidden=True
+            )
 
     def read(self, exception_policy=None, look_for_headers=None):
         header_found = not (look_for_headers if look_for_headers is not None else self.look_for_headers)
@@ -355,9 +378,6 @@ class TableSheet(TemplatedWorksheet):
             self._table_name = re.sub('^[^a-zA-Z_]+', '', table_name)
 
         return self._table_name
-
-
-        return table_name
 
     @property
     def headers(self):

@@ -3,6 +3,7 @@ from types import FunctionType
 
 from collections import Iterable
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.formatting import Rule
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -44,6 +45,7 @@ class TableColumn:
     hidden = Typed("hidden", expected_type=bool, value=False)
     group = Typed("group", expected_type=bool, value=False)
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
+    conditional_formatting = Typed("conditional_formatting", expected_type=Rule, allow_none=True)
 
     # Reading/writing properties
     default = None  # internal value not excel
@@ -56,15 +58,16 @@ class TableColumn:
 
     BLANK_VALUES = (None, "")
 
-    def __init__(self, object_attribute=None, source=None, header=None, width=None, hidden=None, group=None,
-                 data_validation=None, default=None, allow_blank=None, ignore_forced_text=None, header_style=None, row_style=None,
-                 freeze=False):
+    def __init__(self, header=None, object_attribute=None, source=None, width=None, hidden=None, group=None,
+                 data_validation=None, conditional_formatting=None, default=None, allow_blank=None,
+                 ignore_forced_text=None, header_style=None, row_style=None, freeze=False):
 
         self._header = header
         self.width = width
         self.hidden = hidden
         self.group = group
         self.data_validation = data_validation
+        self.conditional_formatting = conditional_formatting
 
         self.default = default
 
@@ -126,25 +129,35 @@ class TableColumn:
 
     def create_header(self, worksheet):
         header = WriteOnlyCell(ws=worksheet, value=self.header)
-        header.style = self.header_style
+        if self.header_style:
+            header.style = self.header_style
         return header
 
     def create_cell(self, worksheet, value=None):
         cell = WriteOnlyCell(
             worksheet,
-            value=self._to_excel(value or self.default)
+            value=self._to_excel(value if value is not None else self.default)
         )
-        cell.style = self.row_style
+        if self.row_style:
+            cell.style = self.row_style
         return cell
 
     def post_process_cell(self, worksheet, cell):
-        if self.data_validation:
-            self.data_validation.add(cell)
+        pass
 
-    def post_process_worksheet(self, worksheet):
+    def post_process_worksheet(self, worksheet, first_row, last_row, data_range):
         column_dimension = worksheet.column_dimensions[self.column_letter]
-        column_dimension.hidden = self.hidden
+
+        # Hiding of grouped columns is handled on worksheet level.
+        if not self.group:
+            column_dimension.hidden = self.hidden
         column_dimension.width = self.width
+
+        if self.data_validation:
+            self.data_validation.ranges.append(data_range)
+
+        if self.conditional_formatting:
+            worksheet.conditional_formatting.add(data_range, self.conditional_formatting)
 
     @property
     def header(self):
@@ -171,6 +184,12 @@ class TableColumn:
 
         return self._object_attribute
 
+    def __str__(self):
+        return "%s(%s)" % (self.__class__.__name__, self._header or self._object_attribute or "")
+
+    def __repr__(self):
+        return str(self)
+
 
 class StringToLong(CellException):
     def __init__(self, cell):
@@ -182,8 +201,8 @@ class StringToLong(CellException):
 class CharColumn(TableColumn):
     max_length = Typed("max_length", expected_type=int, allow_none=True)
 
-    def __init__(self, max_length=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, header=None, max_length=None, **kwargs):
+        super().__init__(header=header, **kwargs)
 
         self.max_length = max_length
 
@@ -229,24 +248,27 @@ class UnableToParseBool(UnableToParseException):
 
 
 class BoolColumn(TableColumn):
-    excel_true = Typed(name="excel_true", value="TRUE", expected_types=(str, int, float))
-    excel_false = Typed(name="excel_false", value="FALSE", expected_types=(str, int, float))
+    excel_true = Typed(name="excel_true", value=True, expected_types=(str, int, float, bool))
+    excel_false = Typed(name="excel_false", value=False, expected_types=(str, int, float, bool))
 
     list_validation = Typed("list_validation", expected_type=bool, value=True)
     strict = Typed("strict", expected_type=bool, value=False)
 
-    def __init__(self, excel_true=None, excel_false=None, list_validation=None, strict=None, **kwargs):
+    def __init__(self, header=None,  excel_true=None, excel_false=None, list_validation=None, strict=None, **kwargs):
         self.excel_true = excel_true
         self.excel_false = excel_false
         self.list_validation = list_validation
         self.strict = strict
 
-        super().__init__(**kwargs)
+        super().__init__(header=header, **kwargs)
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
                 type="list",
-                formula1="\"%s\"" % ",".join((self.excel_true, self.excel_false))
+                formula1="\"%s\"" % ",".join((
+                    str(self.excel_true if self.excel_true is not True else "TRUE"),
+                    str(self.excel_false if self.excel_false is not False else "FALSE")
+                ))
             )
 
     def to_excel(self, value):
@@ -306,10 +328,10 @@ class RoundingRequired(CellException):
 class IntColumn(FloatColumn):
     round_value = Typed("round_value", expected_type=bool, value=True)
 
-    def __init__(self, round_value=None, **kwargs):
+    def __init__(self, header=None, round_value=None, **kwargs):
         kwargs.setdefault("row_style", "Row, integer")
         kwargs.setdefault("default", 0)
-        super().__init__(**kwargs)
+        super().__init__(header=header, **kwargs)
 
         self.round_value = round_value
 
@@ -352,7 +374,7 @@ class ChoiceColumn(TableColumn):
     to_excel_map = None
     from_excel_map = None
 
-    def __init__(self, choices=None, list_validation=None, **kwargs):
+    def __init__(self, header=None, choices=None, list_validation=None, **kwargs):
 
         self.choices = tuple(choices) if choices else None
         self.list_validation = list_validation
@@ -361,7 +383,7 @@ class ChoiceColumn(TableColumn):
         self.from_excel_map = {excel: internal for internal, excel in self.choices}
 
         # Setup maps before super().__init__() to validation of default value.
-        super().__init__(**kwargs)
+        super().__init__(header=header, **kwargs)
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
