@@ -454,7 +454,7 @@ class DatetimeColumn(TableColumn):
         if not isinstance(value, datetime):
             raise UnableToParseDatetime(value=value)
 
-        delta = (value - datetime(year=1900, month=1, day=1))
+        delta = (value - datetime(year=1900, month=1, day=1, tzinfo=value.tzinfo))
         value = delta.days + delta.seconds / self.SECONDS_PER_DAY + 2
 
         # Excel incorrectly assumes 1900 to be a leap year.
