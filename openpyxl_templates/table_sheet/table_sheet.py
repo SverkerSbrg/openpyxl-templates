@@ -18,6 +18,10 @@ class TableSheetException(SheetException):
     pass
 
 
+class IgnoreRow(Exception):
+    pass
+
+
 class ColumnHeadersNotUnique(TableSheetException):
     def __init__(self, columns):
         counter = Counter(column.header for column in columns)
@@ -320,19 +324,24 @@ class TableSheet(TemplatedWorksheet):
         _exception_policy = exception_policy if exception_policy is not None else self.exception_policy
 
         rows = self.worksheet.__iter__()
+        row_number = 0
         try:
             while not header_found:
+                row_number += 1
                 header_found = self._is_row_header(rows.__next__())
 
             row_exceptions = []
             while True:
+                row_number += 1
                 try:
-                    yield self.object_from_row(rows.__next__(), exception_policy=_exception_policy)
+                    yield self.object_from_row(rows.__next__(), row_number, exception_policy=_exception_policy)
                 except CellExceptions as e:
                     if _exception_policy.value <= TableSheetExceptionPolicy.RaiseRowException.value:
                         raise e
                     else:
                         row_exceptions.append(e)
+                except IgnoreRow:
+                    continue
 
                 if row_exceptions and _exception_policy.value <= TableSheetExceptionPolicy.RaiseSheetException.value:
                     raise RowExceptions(row_exceptions)
@@ -348,7 +357,7 @@ class TableSheet(TemplatedWorksheet):
                 return False
         return True
 
-    def object_from_row(self, row, exception_policy=TableSheetExceptionPolicy.RaiseCellException):
+    def object_from_row(self, row, row_number, exception_policy=TableSheetExceptionPolicy.RaiseCellException):
         data = OrderedDict()
         cell_exceptions = []
         for cell, column in zip(chain(row, repeat(None)), self.columns):
@@ -363,9 +372,9 @@ class TableSheet(TemplatedWorksheet):
         if cell_exceptions:
             raise CellExceptions(cell_exceptions)
 
-        return self.create_object(data)
+        return self.create_object(row_number, **data)
 
-    def create_object(self, data):
+    def create_object(self, row_number, **data):
         return self.row_class(**data)
 
     @property

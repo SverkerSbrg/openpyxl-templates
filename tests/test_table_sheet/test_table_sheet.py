@@ -104,7 +104,7 @@ class TemplatedSheetTestCase(TestCase):
             MultipleFrozenColumnsSheet(sheetname="MultipleFrozenColumnsSheet")
 
     def test_read(self):
-        obj = self.sheet.object_from_row(FakeCells("1", "2", "3"))
+        obj = self.sheet.object_from_row(FakeCells("1", "2", "3"), row_number=3)
         self.assertEqual(obj.column1, "1")
         self.assertEqual(obj.column2, "2")
         self.assertEqual(obj.column3, "3")
