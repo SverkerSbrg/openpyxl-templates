@@ -12,6 +12,7 @@ class TestTemplatedSheet(TableSheet):
     column2 = TableColumn(header="column2")
     column3 = TableColumn(header="column3")
 
+
 class TestTemplatedWorkbook(TemplatedWorkbook):
     sheet1 = TestTemplatedSheet()
 
@@ -24,14 +25,15 @@ class FakeTableSheet(TableSheet):
     def __init__(self, *rows):
         self.fake_worksheet = (FakeCells(*row) for row in rows)
 
-        super().__init__(sheetname="fakesheet")
+        super(FakeTableSheet, self).__init__(sheetname="fakesheet")
 
     @property
     def worksheet(self):
         return self.fake_worksheet
 
     def read(self, *args, **kwargs):
-        return tuple(super().read(*args, **kwargs))
+        return tuple(super(FakeTableSheet, self).read(*args, **kwargs))
+
 
 data = (
     ("Col1Row1", "Col2Row1", "Col3Row1"),
@@ -233,8 +235,3 @@ class TemplatedSheetTestCase(TestCase):
         for sheet, cell in ((wb.sheet1, "B2"), (wb.sheet2, "C2"), (wb.sheet3, "D2")):
             sheet.write(data)
             self.assertEqual(cell, sheet.worksheet.freeze_panes)
-
-
-
-
-

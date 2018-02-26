@@ -25,7 +25,7 @@ class IgnoreRow(Exception):
 class ColumnHeadersNotUnique(TableSheetException):
     def __init__(self, columns):
         counter = Counter(column.header for column in columns)
-        super().__init__("headers '%s' has been declared more then once in the same TableSheet" % str(tuple(
+        super(ColumnHeadersNotUnique, self).__init__("headers '%s' has been declared more then once in the same TableSheet" % str(tuple(
             header
             for (header, count)
             in counter.items()
@@ -35,7 +35,7 @@ class ColumnHeadersNotUnique(TableSheetException):
 
 class TempleteStyleNotFound(TableSheetException):
     def __init__(self, missing_style_name, style_set):
-        super().__init__(
+        super(TempleteStyleNotFound, self).__init__(
             "The style '%s' has not been declared. Avaliable styles are: %s)"
             % (missing_style_name, style_set.names)
         )
@@ -43,7 +43,7 @@ class TempleteStyleNotFound(TableSheetException):
 
 class NoTableColumns(TableSheetException):
     def __init__(self, table_sheet):
-        super().__init__(
+        super(NoTableColumns, self).__init__(
             "The TableSheet '%s' has no columns. Declare atleast one."
             % table_sheet.sheetname
         )
@@ -51,7 +51,7 @@ class NoTableColumns(TableSheetException):
 
 class HeadersNotFound(TableSheetException):
     def __init__(self, table_sheet):
-        super().__init__(
+        super(HeadersNotFound, self).__init__(
             "Header column not found on sheet '%s' either make sure that the following headers are "
             "present '%s'." % (
                 table_sheet.sheetname,
@@ -62,7 +62,7 @@ class HeadersNotFound(TableSheetException):
 
 class MultipleFrozenColumns(TableSheetException):
     def __init__(self, table_sheet, frozen_columns):
-        super().__init__(
+        super(MultipleFrozenColumns, self).__init__(
             "TableSheet '%s' has more than one frozen columns. Frozen columns: %s" % (
                 type(table_sheet).__name__,
                 ", ".join(column.header for column in frozen_columns)
@@ -72,7 +72,7 @@ class MultipleFrozenColumns(TableSheetException):
 
 class CannotHideOrGroupLastColumn(TableSheetException):
     def __init__(self):
-        super().__init__(
+        super(CannotHideOrGroupLastColumn, self).__init__(
             "Hiding or grouping the last column when hiding all excessive columns is rendered poorly in excel."
         )
 
@@ -113,7 +113,7 @@ class TableSheet(TemplatedWorksheet):
     def __init__(self, sheetname=None, active=None, table_name=None, title_style=None, description_style=None,
                  format_as_table=None, freeze_header=None, hide_excess_columns=None, look_for_headers=None,
                  exception_policy=None, columns=None):
-        super().__init__(sheetname=sheetname, active=active)
+        super(TableSheet, self).__init__(sheetname=sheetname, active=active)
 
         self._table_name = table_name
         self.title_style = title_style
@@ -328,13 +328,13 @@ class TableSheet(TemplatedWorksheet):
         try:
             while not header_found:
                 row_number += 1
-                header_found = self._is_row_header(rows.__next__())
+                header_found = self._is_row_header(rows.next())
 
             row_exceptions = []
             while True:
                 row_number += 1
                 try:
-                    yield self.object_from_row(rows.__next__(), row_number, exception_policy=_exception_policy)
+                    yield self.object_from_row(rows.next(), row_number, exception_policy=_exception_policy)
                 except CellExceptions as e:
                     if _exception_policy.value <= TableSheetExceptionPolicy.RaiseRowException.value:
                         raise e

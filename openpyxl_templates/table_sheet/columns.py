@@ -13,14 +13,14 @@ from openpyxl_templates.utils import Typed, FakeCell
 
 class ColumnIndexNotSet(OpenpyxlTemplateException):
     def __init__(self, column):
-        super().__init__(
+        super(ColumnIndexNotSet, self).__init__(
             "Column index not set for column '%s'. This should be done automatically by the TableSheet." % column
         )
 
 
 class ObjectAttributeNotSet(OpenpyxlTemplateException):
     def __init__(self, column):
-        super().__init__(
+        super(ObjectAttributeNotSet, self).__init__(
             "object_attribute not set for column '%s'. This should be done automatically by the TableSheet. "
             "The attributed must be assigned explicitly if added after class declaration" % column
         )
@@ -31,10 +31,10 @@ DEFAULT_COLUMN_WIDTH = 8.43
 
 class BlankNotAllowed(CellException):
     def __init__(self, cell):
-        super().__init__("The cell '%s' is not allowed to be empty." % cell.coordinate)
+        super(BlankNotAllowed, self).__init__("The cell '%s' is not allowed to be empty." % cell.coordinate)
 
 
-class TableColumn:
+class TableColumn(object):
     _object_attribute = Typed("_object_attribute", expected_type=str, allow_none=True)
     source = Typed("source", expected_types=(str, FunctionType), allow_none=True)
     _column_index = None
@@ -193,7 +193,7 @@ class TableColumn:
 
 class StringToLong(CellException):
     def __init__(self, cell):
-        super().__init__(
+        super(StringToLong, self).__init__(
             "Value '%s' in cell '%s' is too long." % (cell.value, cell.coordinate)
         )
 
@@ -202,7 +202,7 @@ class CharColumn(TableColumn):
     max_length = Typed("max_length", expected_type=int, allow_none=True)
 
     def __init__(self, header=None, max_length=None, **kwargs):
-        super().__init__(header=header, **kwargs)
+        super(CharColumn, self).__init__(header=header, **kwargs)
 
         self.max_length = max_length
 
@@ -227,7 +227,7 @@ class CharColumn(TableColumn):
 class TextColumn(CharColumn):
     def __init__(self, **kwargs):
         kwargs.setdefault("row_style", "Row, text")
-        super().__init__(**kwargs)
+        super(TextColumn, self).__init__(**kwargs)
 
 
 class UnableToParseException(CellException):
@@ -238,7 +238,7 @@ class UnableToParseException(CellException):
             message = "Unable to convert value '%s' of cell '%s' to %s." % (cell.value, cell.coordinate, self.type)
         else:
             message = "Unable to convert value '%s' to '%s'" % (value, self.type)
-        super().__init__(
+        super(UnableToParseException, self).__init__(
             message
         )
 
@@ -260,7 +260,7 @@ class BoolColumn(TableColumn):
         self.list_validation = list_validation
         self.strict = strict
 
-        super().__init__(header=header, **kwargs)
+        super(BoolColumn, self).__init__(header=header, **kwargs)
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
@@ -298,7 +298,7 @@ class FloatColumn(TableColumn):
     def __init__(self, **kwargs):
         kwargs.setdefault("row_style", "Row, decimal")
         kwargs.setdefault("default", 0.0)
-        super().__init__(**kwargs)
+        super(FloatColumn, self).__init__(**kwargs)
 
     def to_excel(self, value):
         try:
@@ -319,7 +319,7 @@ class UnableToParseInt(UnableToParseException):
 
 class RoundingRequired(CellException):
     def __init__(self, cell):
-        super().__init__(
+        super(RoundingRequired, self).__init__(
             "The value '%s'  in cell '%s' cannot be converted to an integer without rounding the value. Enable "
             "round_value to do this automatically." % (cell.value, cell.coordinate)
         )
@@ -331,7 +331,7 @@ class IntColumn(FloatColumn):
     def __init__(self, header=None, round_value=None, **kwargs):
         kwargs.setdefault("row_style", "Row, integer")
         kwargs.setdefault("default", 0)
-        super().__init__(header=header, **kwargs)
+        super(IntColumn, self).__init__(header=header, **kwargs)
 
         self.round_value = round_value
 
@@ -358,7 +358,7 @@ class IntColumn(FloatColumn):
 
 class IllegalChoice(CellException):
     def __init__(self, cell, choices):
-        super().__init__(
+        super(IllegalChoice, self).__init__(
             "The value '%s' in cell '%s' is not a legal choices. Choices are %s." % (
                 cell.value,
                 cell.coordinate,
@@ -383,7 +383,7 @@ class ChoiceColumn(TableColumn):
         self.from_excel_map = {excel: internal for internal, excel in self.choices}
 
         # Setup maps before super().__init__() to validation of default value.
-        super().__init__(header=header, **kwargs)
+        super(ChoiceColumn, self).__init__(header=header, **kwargs)
 
         if self.list_validation and not self.data_validation:
             self.data_validation = DataValidation(
@@ -415,7 +415,7 @@ class ChoiceColumn(TableColumn):
 class FortnumChoiceColumn(ChoiceColumn):
     def __init__(self, fortnum, **kwargs):
         kwargs["choices"] = ((f, str(f)) for f in fortnum)
-        super().__init__(**kwargs)
+        super(FortnumChoiceColumn, self).__init__(**kwargs)
 
 
 class UnableToParseDatetime(UnableToParseException):
@@ -428,7 +428,7 @@ class DatetimeColumn(TableColumn):
     def __init__(self, **kwargs):
         kwargs.setdefault("row_style", "Row, date")
         kwargs.setdefault("header_style", "Header, center")
-        super().__init__(**kwargs)
+        super(DatetimeColumn, self).__init__(**kwargs)
 
     def from_excel(self, cell, value):
         if isinstance(value, (datetime, date)):
@@ -472,12 +472,12 @@ class UnableToParseDate(UnableToParseException):
 class DateColumn(DatetimeColumn):
     def from_excel(self, cell, value):
         try:
-            return super().from_excel(cell, value).date()
+            return super(DateColumn, self).from_excel(cell, value).date()
         except UnableToParseDatetime:
             raise UnableToParseDate(cell=cell)
 
     def to_excel(self, value):
-        return int(super().to_excel(value))
+        return int(super(DateColumn, self).to_excel(value))
 
 
 class UnableToParseTime(UnableToParseException):
@@ -487,14 +487,14 @@ class UnableToParseTime(UnableToParseException):
 class TimeColumn(DatetimeColumn):
     def __init__(self, **kwargs):
         kwargs.setdefault("row_style", "Row, time")
-        super().__init__(**kwargs)
+        super(TimeColumn, self).__init__(**kwargs)
 
     def from_excel(self, cell, value):
         if type(value) == time:
             return value
 
         try:
-            return super().from_excel(cell, value).time()
+            return super(TimeColumn, self).from_excel(cell, value).time()
         except UnableToParseDatetime:
             raise UnableToParseTime(cell)
 
@@ -516,7 +516,7 @@ class TimeColumn(DatetimeColumn):
 
 class NoFormula(OpenpyxlTemplateException):
     def __init__(self):
-        super().__init__("No formula specified for FormulaColumn.")
+        super(NoFormula, self).__init__("No formula specified for FormulaColumn.")
 
 
 class FormulaColumn(TableColumn):
@@ -528,7 +528,7 @@ class FormulaColumn(TableColumn):
         if not self.formula:
             raise NoFormula()
 
-        super().__init__(**kwargs)
+        super(FormulaColumn, self).__init__(**kwargs)
 
     def get_value_from_object(self, obj):
         return self.formula

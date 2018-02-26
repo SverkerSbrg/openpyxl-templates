@@ -4,7 +4,7 @@ from openpyxl_templates.utils import OrderedType, Typed
 
 class TemplatedWorkbookNotSet(OpenpyxlTemplateException):
     def __init__(self, templated_sheet):
-        super().__init__(
+        super(TemplatedWorkbookNotSet, self).__init__(
             "The sheet '%s' has no assosiated workbook. This should be done automatically by the TemplatedWorkbook."
             % templated_sheet.sheetname
         )
@@ -12,17 +12,19 @@ class TemplatedWorkbookNotSet(OpenpyxlTemplateException):
 
 class WorksheetDoesNotExist(OpenpyxlTemplateException):
     def __init__(self, templated_sheet):
-        super().__init__(
+        super(WorksheetDoesNotExist, self).__init__(
             "The workbook has no sheet '%s'." % templated_sheet.sheetname
         )
 
 
 class SheetnameNotSet(OpenpyxlTemplateException):
     def __init__(self):
-        super().__init__("Sheetname not specified. This should be done automatically by the TemplatedWorkbook.")
+        super(SheetnameNotSet, self).__init__(
+            "Sheetname not specified. This should be done automatically by the TemplatedWorkbook.")
 
 
-class TemplatedWorksheet(metaclass=OrderedType):
+class TemplatedWorksheet:
+    __metaclass__ = OrderedType
     _sheetname = Typed("_sheetname", expected_type=str, allow_none=True)
     active = Typed("active", expected_type=bool, value=False)
     _workbook = None
@@ -98,5 +100,3 @@ class TemplatedWorksheet(metaclass=OrderedType):
 
     def __repr__(self):
         return str(self)
-
-

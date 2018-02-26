@@ -1,5 +1,7 @@
+# coding=utf-8
 import random
 from datetime import date, datetime
+import time
 from enum import Enum
 from os.path import dirname, join
 
@@ -65,13 +67,19 @@ persons = (
         "Mouse",
         date(year=1975, month=6, day=17),
         Sexes.FEMALE
+    ),
+    Person(
+        u"女",
+        u"娲",
+        date(year=1975, month=6, day=17),
+        Sexes.FEMALE
     )
 )
 
 
 class SexColumn(ChoiceColumn):
     def __init__(self, **kwargs):
-        super().__init__(
+        super(SexColumn, self).__init__(
             choices=(
                 (Sexes.MALE, "Male"),
                 (Sexes.FEMALE, "Female"),
@@ -103,9 +111,13 @@ class DemoObject:
         self.datetime = datetime
 
 
+def to_timestamp(date_value):
+    return time.mktime(date_value.timetuple())
+
+
 def demo_objects(count=100):
-    from_date = datetime(year=1990, month=1, day=1).timestamp()
-    to_date = datetime(year=2020, month=12, day=31).timestamp()
+    from_date = to_timestamp(datetime(year=1990, month=1, day=1))
+    to_date = to_timestamp(datetime(year=2020, month=12, day=31))
 
     dates = list(datetime.fromtimestamp(random.uniform(from_date, to_date)) for i in range(0, count))
     dates.sort()
@@ -157,7 +169,8 @@ class DemoWorkbook(TemplatedWorkbook):
 
 
 if __name__ == "__main__":
-    workbook = DemoWorkbook(template_styles=DefaultStyleSet(ExtendedStyle(base="Default", name="Header", fill=SolidFill("FF0000"))))
+    workbook = DemoWorkbook(
+        template_styles=DefaultStyleSet(ExtendedStyle(base="Default", name="Header", fill=SolidFill("FF0000"))))
     workbook.column_demo.write(objects=list(demo_objects(100)), title="Column demo")
     workbook.persons.write(objects=persons, title="Persons")
 
@@ -165,4 +178,3 @@ if __name__ == "__main__":
 
     wb = DemoWorkbook(file=filename)
     print(list(wb.persons.read()))
-
