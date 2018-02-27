@@ -7,7 +7,8 @@ class MagicString(str):
     pass
 
 
-class OrderedTypeTestClass(metaclass=OrderedType):
+class OrderedTypeTestClass(object):
+    __metaclass__ = OrderedType
     item_class = MagicString
 
     @class_property

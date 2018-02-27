@@ -11,13 +11,13 @@ DEFAULT_ACCENT_COLOR = "1a1f43"
 
 class ParentForExtendedStyleNotFound(KeyError):
     def __init__(self, extended_style):
-        super().__init__("Base style '%s' for ExtendedStyle '%s' not found." % (extended_style.base, extended_style.name))
+        super(ParentForExtendedStyleNotFound, self).__init__("Base style '%s' for ExtendedStyle '%s' not found." % (extended_style.base, extended_style.name))
 
 
 class ExtendedStyle(dict):
     def __init__(self, base, name, font=None, fill=None, border=None, alignment=None, number_format=None,
                  protection=None):
-        super().__init__()
+        super(ExtendedStyle, self).__init__()
 
         self.base = base
         self.name = name
@@ -54,7 +54,7 @@ class ExtendedStyle(dict):
         return object_class(**kwargs)
 
 
-class StyleSet:
+class StyleSet(object):
     _styles = None
 
     def __init__(self, *styles):
@@ -113,7 +113,7 @@ class StyleSet:
 
 class DefaultStyleSet(StyleSet):
     def __init__(self, *styles):
-        super().__init__(
+        super(DefaultStyleSet, self).__init__(
             NamedStyle(
                 name="Default",
             ),

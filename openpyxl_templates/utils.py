@@ -101,7 +101,7 @@ class Typed(object):
 
 class class_property(classmethod):
     def __get__(self, instance, owner):
-        return super().__get__(instance, owner)()
+        return super(class_property, self).__get__(instance, owner)()
 
 
 class OrderedType(type):
@@ -113,7 +113,7 @@ class OrderedType(type):
         return OrderedDict()
 
     def __new__(mcs, name, bases, classdict):
-        obj = super().__new__(mcs, name, bases, classdict)
+        obj = super(OrderedType, mcs).__new__(mcs, name, bases, classdict)
 
         items = OrderedDict()
 

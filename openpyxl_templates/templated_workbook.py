@@ -11,15 +11,18 @@ from openpyxl_templates.utils import OrderedType, Typed
 
 class SheetnamesNotUnique(OpenpyxlTemplateException):
     def __init__(self, templated_workbook):
-        super().__init__("Sheetnames are not unique on TemplatedWorkbook '%s'." % type(templated_workbook).__name__)
+        super(SheetnamesNotUnique, self).__init__(
+            "Sheetnames are not unique on TemplatedWorkbook '%s'." % type(templated_workbook).__name__)
 
 
 class MultipleActiveSheets(OpenpyxlTemplateException):
     def __init__(self, templated_workbook):
-        super().__init__("The TemplatedWorkbook '%s' has multiple active sheets." % type(templated_workbook).__name__)
+        super(MultipleActiveSheets, self).__init__(
+            "The TemplatedWorkbook '%s' has multiple active sheets." % type(templated_workbook).__name__)
 
 
-class TemplatedWorkbook(metaclass=OrderedType):
+class TemplatedWorkbook:
+    __metaclass__ = OrderedType
     item_class = TemplatedWorksheet
 
     templated_sheets = None
@@ -37,7 +40,7 @@ class TemplatedWorkbook(metaclass=OrderedType):
     #     return super().__new__(cls)
 
     def __init__(self, file=None, template_styles=None, timestamp=None, templated_sheets=None, data_only=False):
-        super().__init__()
+        super(TemplatedWorkbook, self).__init__()
 
         self.workbook = load_workbook(filename=file, data_only=data_only) if file else Workbook()
 
@@ -58,7 +61,8 @@ class TemplatedWorkbook(metaclass=OrderedType):
         self._check_only_one_active()
 
     def _check_unique_sheetnames(self):
-        if len(set(templated_sheet.sheetname for templated_sheet in self.templated_sheets)) < len(self.templated_sheets):
+        if len(set(templated_sheet.sheetname for templated_sheet in self.templated_sheets)) < len(
+                self.templated_sheets):
             raise SheetnamesNotUnique(self)
 
     def _check_only_one_active(self):
@@ -75,7 +79,7 @@ class TemplatedWorkbook(metaclass=OrderedType):
 
         return sheet
 
-        #TODO: Parse sheetname to an attribute? Or removing add to self all together?
+        # TODO: Parse sheetname to an attribute? Or removing add to self all together?
         # if add_to_self:
         #     setattr(self, sheet.sheetname, sheet)
 
@@ -104,7 +108,7 @@ class TemplatedWorkbook(metaclass=OrderedType):
         for templated_sheet in self.templated_sheets:
             order[templated_sheet.sheetname] = index
             if templated_sheet.active:
-               active_index = index
+                active_index = index
             index += 1
 
         for sheetname in self.workbook.sheetnames:
@@ -132,5 +136,3 @@ class TemplatedWorkbook(metaclass=OrderedType):
 
     def create_sheet(self, title=None, index=None):
         return self.workbook.create_sheet(title, index)
-
-
