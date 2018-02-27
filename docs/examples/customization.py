@@ -19,8 +19,8 @@ class IceCreamSheet(TableSheet):
     color = CharColumn()
     price = FloatColumn()
 
-    def create_object(self, data):
-        return IceCream(**dict(data))
+    def create_object(self, row_number, **data):
+        return IceCream(**data)
 
 
 class IceCreamWorkbook(TemplatedWorkbook):

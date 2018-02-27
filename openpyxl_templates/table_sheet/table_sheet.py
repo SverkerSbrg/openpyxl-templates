@@ -328,13 +328,13 @@ class TableSheet(TemplatedWorksheet):
         try:
             while not header_found:
                 row_number += 1
-                header_found = self._is_row_header(rows.next())
+                header_found = self._is_row_header(next(rows))
 
             row_exceptions = []
             while True:
                 row_number += 1
                 try:
-                    yield self.object_from_row(rows.next(), row_number, exception_policy=_exception_policy)
+                    yield self.object_from_row(next(rows), row_number, exception_policy=_exception_policy)
                 except CellExceptions as e:
                     if _exception_policy.value <= TableSheetExceptionPolicy.RaiseRowException.value:
                         raise e
@@ -372,6 +372,7 @@ class TableSheet(TemplatedWorksheet):
         if cell_exceptions:
             raise CellExceptions(cell_exceptions)
 
+        # return self.row_class(**data)
         return self.create_object(row_number, **data)
 
     def create_object(self, row_number, **data):

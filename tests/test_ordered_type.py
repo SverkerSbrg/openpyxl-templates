@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from future.utils import with_metaclass
+
 from openpyxl_templates.utils import OrderedType, class_property
 
 
@@ -7,8 +9,7 @@ class MagicString(str):
     pass
 
 
-class OrderedTypeTestClass(object):
-    __metaclass__ = OrderedType
+class OrderedTypeTestClass(with_metaclass(OrderedType)):
     item_class = MagicString
 
     @class_property
