@@ -40,10 +40,16 @@ class TemplatedWorkbook(with_metaclass(OrderedType)):
     #         return load_workbook(file)
     #     return super().__new__(cls)
 
-    def __init__(self, file=None, template_styles=None, timestamp=None, templated_sheets=None, data_only=False):
+    def __init__(self, file=None, template_styles=None, timestamp=None, templated_sheets=None, keep_vba=False,
+                  data_only=False, keep_links=True):
         super(TemplatedWorkbook, self).__init__()
 
-        self.workbook = load_workbook(filename=file, data_only=data_only) if file else Workbook()
+        self.workbook = load_workbook(
+            filename=file,
+            data_only=data_only,
+            keep_vba=keep_vba,
+            keep_links=keep_links
+        ) if file else Workbook()
 
         self.template_styles = template_styles or DefaultStyleSet()
         self.timestamp = timestamp
