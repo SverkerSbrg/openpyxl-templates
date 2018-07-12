@@ -1,3 +1,4 @@
+import inspect
 from collections import OrderedDict
 from weakref import WeakKeyDictionary
 
@@ -127,17 +128,13 @@ class OrderedType(type):
             columns = sorted(inspect.getmembers(cls, lambda o: isinstance(o, TableColumn)),
                                  key=lambda i: i[1].column_index)
             if columns:
-                from openpyxl_templates.table_sheet.columns import TableColumn
-                cls = type.__new__(mcs, name, bases, classdict)
-                columns = sorted(inspect.getmembers(cls, lambda o: isinstance(o, TableColumn)),
-                                 key=lambda i: i[1].column_index)
                 for column in columns:
                     if issubclass(type(column[1]), item_class):
                         items[column[0]] = column[1]
             else:
-            for key, value in classdict.items():
-                if issubclass(type(value), item_class):
-                    items[key] = value
+                for key, value in classdict.items():
+                    if issubclass(type(value), item_class):
+                        items[key] = value
 
         obj._items = items
 
