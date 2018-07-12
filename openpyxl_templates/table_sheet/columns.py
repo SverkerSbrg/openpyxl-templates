@@ -37,6 +37,7 @@ class BlankNotAllowed(CellException):
 class TableColumn(object):
     _object_attribute = Typed("_object_attribute", expected_type=str, allow_none=True)
     source = Typed("source", expected_types=(str, FunctionType), allow_none=True)
+    creation_counter = 0
     _column_index = None
 
     # Rendering properties
@@ -85,6 +86,8 @@ class TableColumn(object):
         self.row_style = row_style
 
         self.freeze = freeze
+        self.column_index = TableColumn.creation_counter
+        TableColumn.creation_counter+=1
 
     def get_value_from_object(self, obj):
         if isinstance(obj, (list, tuple)):
