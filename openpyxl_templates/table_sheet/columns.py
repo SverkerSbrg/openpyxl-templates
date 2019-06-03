@@ -480,6 +480,12 @@ class DateColumn(DatetimeColumn):
         return int(super(DateColumn, self).to_excel(value))
 
 
+class YearColumn(DateColumn):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("row_style", "Row, year")
+        super().__init__(**kwargs)
+
+
 class UnableToParseTime(UnableToParseException):
     type = "time"
 
