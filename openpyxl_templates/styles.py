@@ -1,7 +1,7 @@
 from collections import deque
 from itertools import chain
 
-from openpyxl.styles import NamedStyle
+from openpyxl.styles import NamedStyle, Alignment
 
 from openpyxl_templates.utils import SolidFill
 
@@ -116,6 +116,7 @@ class DefaultStyleSet(StyleSet):
         super(DefaultStyleSet, self).__init__(
             NamedStyle(
                 name="Default",
+                alignment=Alignment(vertical="top")
             ),
             ExtendedStyle(
                 base="Default",
