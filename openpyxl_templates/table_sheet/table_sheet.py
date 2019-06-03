@@ -295,7 +295,8 @@ class TableSheet(TemplatedWorksheet):
                 Table(
                     ref="%s:%s" % (
                         self._first_header_cell.coordinate,
-                        self._last_data_cell.coordinate if self._last_data_cell else self._last_header_cell.coordinate
+                        self._last_data_cell.coordinate if self._last_data_cell
+                        else "{0}{1}".format(self._last_header_cell.column, self._last_header_cell.row + 1)
                     ),
                     displayName=self.table_name,
                 )
@@ -318,7 +319,7 @@ class TableSheet(TemplatedWorksheet):
             if type(self.print_title_rows) == str:
                 print_title_rows = self.print_title_rows
             else:
-                print_title_rows = "1:%d" % (self._first_data_cell.row - 1)
+                print_title_rows = "1:%d" % self._first_header_cell.row
             worksheet.print_title_rows = print_title_rows
         if self.print_title_columns:
             if type(self.print_title_columns) == str:
