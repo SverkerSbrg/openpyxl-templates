@@ -6,6 +6,7 @@ from itertools import chain, repeat, groupby
 
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.page import PrintPageSetup
 from openpyxl.worksheet.table import Table
 
 from openpyxl_templates.exceptions import CellExceptions, RowExceptions, SheetException, CellException
@@ -94,9 +95,17 @@ class TableSheet(TemplatedWorksheet):
 
     format_as_table = Typed("format_as_header", expected_type=bool, value=True)
     freeze_header = Typed("freeze_header", expected_type=bool, value=True)
+    print_title_rows = Typed("print_title_rows", expected_types=[str, bool], value=True, allow_none=True)
+
+    freeze_column = Typed("freeze_column", expected_types=[int, bool], value=False)
+    print_title_columns = Typed("print_title_columns", expected_types=[str, int, bool], value=False, allow_none=True)
     hide_excess_columns = Typed("hide_excess_columns", expected_type=bool, value=True)
 
+    # print_setup = Typed("print_setup", expected_types=PrintPageSetup, value=None, allow_none=True)
+    # fit_to_width = Typed("fit_to_width", expected_types=)
+
     look_for_headers = Typed("look_for_headers", expected_type=bool, value=True)
+    suffix_duplicated_headers = Typed("suffix_duplicated_headers", expected_type=bool, value=True)
     exception_policy = Typed(
         "exception_policy",
         expected_type=TableSheetExceptionPolicy,
@@ -112,7 +121,8 @@ class TableSheet(TemplatedWorksheet):
 
     def __init__(self, sheetname=None, active=None, table_name=None, title_style=None, description_style=None,
                  format_as_table=None, freeze_header=None, hide_excess_columns=None, look_for_headers=None,
-                 exception_policy=None, columns=None):
+                 exception_policy=None, columns=None, print_title_rows=None, print_title_columns=None,
+                 suffix_duplicated_headers=None):
         super(TableSheet, self).__init__(sheetname=sheetname, active=active)
 
         self._table_name = table_name
@@ -123,8 +133,12 @@ class TableSheet(TemplatedWorksheet):
         self.hide_excess_columns = hide_excess_columns
         self.look_for_headers = look_for_headers
         self.exception_policy = exception_policy
+        self.print_title_rows = print_title_rows
+        self.print_title_columns = print_title_columns
+        self.suffix_duplicated_headers = suffix_duplicated_headers
 
         self.columns = []
+        self._column_headers_counter = Counter()
         for object_attribute, column in self._items.items():
             self.add_column(column, object_attribute=object_attribute)
 
@@ -167,6 +181,11 @@ class TableSheet(TemplatedWorksheet):
 
         self.columns.append(column)
         self._row_class = None
+
+        # Suffix duplicated column headers
+        self._column_headers_counter[column.header] += 1
+        if self._column_headers_counter[column.header] > 1 and self.suffix_duplicated_headers:
+            column._header = "%s %d" % (column.header, self._headers[column.header])
 
         return column
 
@@ -213,13 +232,6 @@ class TableSheet(TemplatedWorksheet):
         title.style = self.title_style
 
         worksheet.append((title,))
-
-        worksheet.merge_cells(
-            start_row=title.row,
-            start_column=title.col_idx,
-            end_row=title.row,
-            end_column=title.col_idx + len(self.columns) - 1
-        )
 
     def write_description(self, worksheet, description=None):
         if not description:
@@ -300,6 +312,23 @@ class TableSheet(TemplatedWorksheet):
             column = 0
         if row + column > 1:
             worksheet.freeze_panes = worksheet["%s%s" % (get_column_letter(column+1), row)]
+
+        # Print titles
+        if self.print_title_rows:
+            if type(self.print_title_rows) == str:
+                print_title_rows = self.print_title_rows
+            else:
+                print_title_rows = "1:%d" % (self._first_data_cell.row - 1)
+            worksheet.print_title_rows = print_title_rows
+        if self.print_title_columns:
+            if type(self.print_title_columns) == str:
+                print_title_columns = self.print_title_columns
+            elif type(self.print_title_columns) == int:
+                # Transform from zero indexed to one indexed
+                print_title_columns = "1:%d" % self.print_title_columns + 1
+            else:
+                print_title_columns = "1:1"
+            worksheet.print_title_columns = print_title_columns
 
         # Grouping
         groups = groupby(self.columns, lambda col: col.group)
