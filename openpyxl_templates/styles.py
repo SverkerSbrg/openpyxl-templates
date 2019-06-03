@@ -176,6 +176,12 @@ class DefaultStyleSet(StyleSet):
             ),
             ExtendedStyle(
                 base="Row",
+                name="Row, year",
+                alignment={"horizontal": "center"},
+                number_format="yyyy"
+            ),
+            ExtendedStyle(
+                base="Row",
                 name="Row, time",
                 alignment={"horizontal": "center"},
                 number_format="h:mm"
