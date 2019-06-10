@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta, time
 from types import FunctionType
 
-from collections import Iterable
+from collections import Iterable, defaultdict
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.formatting import Rule
 from openpyxl.utils import get_column_letter
@@ -34,40 +34,55 @@ class BlankNotAllowed(CellException):
         super(BlankNotAllowed, self).__init__("The cell '%s' is not allowed to be empty." % cell.coordinate)
 
 
-class TableColumn(object):
-    _object_attribute = Typed("_object_attribute", expected_type=str, allow_none=True)
-    source = Typed("source", expected_types=(str, FunctionType), allow_none=True)
-    _column_index = None
-
-    # Rendering properties
-    _header = Typed("header", expected_type=str, allow_none=True)
-    width = Typed("width", expected_types=(int, float), value=DEFAULT_COLUMN_WIDTH * 2)
-    hidden = Typed("hidden", expected_type=bool, value=False)
-    group = Typed("group", expected_type=bool, value=False)
+class RowStyle:
+    cell_style = Typed("cell_style", expected_type=str, allow_none=True)
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
     conditional_formatting = Typed("conditional_formatting", expected_type=Rule, allow_none=True)
 
+    def __init__(self, row_type, getter=None, cell_style=None, conditional_formatting=None, data_validation=None):
+        self.row_type=row_type
+        self.getter = getter
+        self.cell_style = cell_style
+        self.conditional_formatting = conditional_formatting
+        self.data_validation = data_validation
+
+
+class TableColumn(object):
+    _column_index = None
+
     # Reading/writing properties
+    _object_attribute = Typed("_object_attribute", expected_type=str, allow_none=True)
+    getter = None
     default = None  # internal value not excel
     allow_blank = Typed("allow_blank", expected_type=bool, value=True)
     ignore_forced_text = Typed("ignore_forced_text", expected_type=bool, value=True)
 
+    # Column rendering properties
+    _header = Typed("header", expected_type=str, allow_none=True)
+    width = Typed("width", expected_types=(int, float), value=DEFAULT_COLUMN_WIDTH * 2)
+    hidden = Typed("hidden", expected_type=bool, value=False)
+    group = Typed("group", expected_type=bool, value=False)
     header_style = Typed("header_style", expected_type=str, value="Header")
-    row_style = Typed("row_style", expected_type=str, value="Row")
     freeze = Typed("freeze", expected_type=bool, value=False)
+
+    # Cell rendering properties
+    cell_style = Typed("cell_style", expected_type=str, value="Row")
+    data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
+    conditional_formatting = Typed("conditional_formatting", expected_type=Rule, allow_none=True)
+
+    row_styles = None
 
     BLANK_VALUES = (None, "")
 
     def __init__(self, header=None, object_attribute=None, source=None, width=None, hidden=None, group=None,
                  data_validation=None, conditional_formatting=None, default=None, allow_blank=None,
-                 ignore_forced_text=None, header_style=None, row_style=None, freeze=False):
+                 ignore_forced_text=None, header_style=None, cell_style=None, freeze=False, getter=None,
+                 row_styles=None):
 
         self._header = header
         self.width = width
         self.hidden = hidden
         self.group = group
-        self.data_validation = data_validation
-        self.conditional_formatting = conditional_formatting
 
         self.default = default
 
@@ -82,11 +97,37 @@ class TableColumn(object):
         self.source = source
 
         self.header_style = header_style
-        self.row_style = row_style
+
+        self.getter = getter or self.getter
+        self.getters = defaultdict(lambda: self.getter)
+
+        self.cell_style = cell_style or self.cell_style
+        self.cell_styles = defaultdict(lambda: self.cell_style)
+
+        self.data_validation = data_validation
+        self.data_validations = defaultdict(lambda: self.data_validation)
+
+        self.conditional_formatting = conditional_formatting
+        self.conditional_formattings = defaultdict(lambda: self.conditional_formatting)
+
+        for row_style in row_styles or self.row_styles or []:
+            row_type = row_style.row_type
+            if row_style.getter is not None:
+                self.getters[row_type] = row_style.getter
+            if row_style.cell_style is not None:
+                self.cell_styles[row_type] = row_style.cell_style
+            if row_style.data_validation is not None:
+                self.data_validations[row_type] = row_style.data_validation
+            if row_style.conditional_formatting is not None:
+                self.conditional_formattings[row_type] = row_style.conditional_formatting
 
         self.freeze = freeze
 
-    def get_value_from_object(self, obj):
+    def get_value_from_object(self, obj, row_type=None):
+        getter = self.getters[row_type]
+        if getter:
+            return self.getter(obj)
+
         if isinstance(obj, (list, tuple)):
             return obj[self.column_index - 1]
 
@@ -95,17 +136,17 @@ class TableColumn(object):
 
         return getattr(obj, self.object_attribute, None)
 
-    def _to_excel(self, value):
+    def _to_excel(self, value, row_type=None):
         if value in self.BLANK_VALUES:
             if self.default is not None:
-                return self.to_excel(self.default)
+                return self.to_excel(self.default, row_type=row_type)
             if self.allow_blank:
                 return None
             raise BlankNotAllowed(WriteOnlyCell())
 
         return self.to_excel(value)
 
-    def to_excel(self, value):
+    def to_excel(self, value, row_type=None):
         return value
 
     def _from_excel(self, cell):
@@ -124,8 +165,9 @@ class TableColumn(object):
         return value
 
     def prepare_worksheet(self, worksheet):
-        if self.data_validation:
-            worksheet.add_data_validation(self.data_validation)
+        for data_validation in set(self.data_validations.values()):
+            if data_validation:
+                worksheet.add_data_validation(data_validation)
 
     def create_header(self, worksheet):
         header = WriteOnlyCell(ws=worksheet, value=self.header)
@@ -133,17 +175,24 @@ class TableColumn(object):
             header.style = self.header_style
         return header
 
-    def create_cell(self, worksheet, value=None):
+    def create_cell(self, worksheet, value=None, row_type=None):
         cell = WriteOnlyCell(
             worksheet,
-            value=self._to_excel(value if value is not None else self.default)
+            value=self._to_excel(value if value is not None else self.default, row_type=row_type)
         )
-        if self.row_style:
-            cell.style = self.row_style
+        cell_style = self.cell_styles[row_type]
+        if cell_style:
+            cell.style = cell_style
         return cell
 
-    def post_process_cell(self, worksheet, cell):
-        pass
+    def post_process_cell(self, worksheet, cell, row_type=None):
+        data_validation = self.data_validations[row_type]
+        if data_validation:
+            data_validation.add(cell)
+
+        conditional_formatting = self.conditional_formattings[row_type]
+        if conditional_formatting:
+            worksheet.conditional_formatting.add(cell, conditional_formatting)
 
     def post_process_worksheet(self, worksheet, first_row, last_row, data_range):
         column_dimension = worksheet.column_dimensions[self.column_letter]
@@ -152,12 +201,6 @@ class TableColumn(object):
         if not self.group:
             column_dimension.hidden = self.hidden
         column_dimension.width = self.width
-
-        if self.data_validation:
-            self.data_validation.ranges.append(data_range)
-
-        if self.conditional_formatting:
-            worksheet.conditional_formatting.add(data_range, self.conditional_formatting)
 
     @property
     def header(self):
@@ -183,6 +226,10 @@ class TableColumn(object):
             raise ObjectAttributeNotSet(self)
 
         return self._object_attribute
+
+    @property
+    def styles(self):
+        return tuple({self.header_style, self.cell_style, *tuple(self.cell_styles.values())} - {None})
 
     def __str__(self):
         return "%s(%s)" % (self.__class__.__name__, self._header or self._object_attribute or "")
@@ -217,7 +264,7 @@ class CharColumn(TableColumn):
 
         return value
 
-    def to_excel(self, value):
+    def to_excel(self, value, row_type=None):
         if value is None:
             return ""
 
@@ -226,7 +273,7 @@ class CharColumn(TableColumn):
 
 class TextColumn(CharColumn):
     def __init__(self, **kwargs):
-        kwargs.setdefault("row_style", "Row, text")
+        kwargs.setdefault("cell_style", "Row, text")
         super(TextColumn, self).__init__(**kwargs)
 
 
@@ -271,7 +318,7 @@ class BoolColumn(TableColumn):
                 ))
             )
 
-    def to_excel(self, value):
+    def to_excel(self, value, row_type=None):
         return self.excel_true if value else self.excel_false
 
     def from_excel(self, cell, value):
@@ -296,11 +343,11 @@ class UnableToParseFloat(UnableToParseException):
 
 class FloatColumn(TableColumn):
     def __init__(self, **kwargs):
-        kwargs.setdefault("row_style", "Row, decimal")
+        kwargs.setdefault("cell_style", "Row, decimal")
         kwargs.setdefault("default", 0.0)
         super(FloatColumn, self).__init__(**kwargs)
 
-    def to_excel(self, value):
+    def to_excel(self, value, row_type=None):
         try:
             return float(value)
         except (ValueError, TypeError):
@@ -329,13 +376,13 @@ class IntColumn(FloatColumn):
     round_value = Typed("round_value", expected_type=bool, value=True)
 
     def __init__(self, header=None, round_value=None, **kwargs):
-        kwargs.setdefault("row_style", "Row, integer")
+        kwargs.setdefault("cell_style", "Row, integer")
         kwargs.setdefault("default", 0)
         super(IntColumn, self).__init__(header=header, **kwargs)
 
         self.round_value = round_value
 
-    def to_excel(self, value):
+    def to_excel(self, value, row_type=None):
         try:
             f = float(value)
             i = round(f, 0)
@@ -391,7 +438,7 @@ class ChoiceColumn(TableColumn):
                 formula1="\"%s\"" % ",".join('%s' % str(excel) for internal, excel in self.choices)
             )
 
-    def to_excel(self, value):
+    def to_excel(self, value, row_type=None):
         if value not in self.to_excel_map:
             if self.default is not None:
                 value = self.default
@@ -426,7 +473,7 @@ class DatetimeColumn(TableColumn):
     SECONDS_PER_DAY = 24 * 60 * 60
 
     def __init__(self, **kwargs):
-        kwargs.setdefault("row_style", "Row, date")
+        kwargs.setdefault("cell_style", "Row, date")
         kwargs.setdefault("header_style", "Header, center")
         super(DatetimeColumn, self).__init__(**kwargs)
 
@@ -448,7 +495,7 @@ class DatetimeColumn(TableColumn):
 
         raise UnableToParseDatetime(cell)
 
-    def to_excel(self, value):
+    def to_excel(self, value, row_type=None):
         if type(value) == date:
             value = datetime.combine(value, time.min)
         if not isinstance(value, datetime):
@@ -482,7 +529,7 @@ class DateColumn(DatetimeColumn):
 
 class YearColumn(DateColumn):
     def __init__(self, **kwargs):
-        kwargs.setdefault("row_style", "Row, year")
+        kwargs.setdefault("cell_style", "Row, year")
         super().__init__(**kwargs)
 
 
@@ -492,7 +539,7 @@ class UnableToParseTime(UnableToParseException):
 
 class TimeColumn(DatetimeColumn):
     def __init__(self, **kwargs):
-        kwargs.setdefault("row_style", "Row, time")
+        kwargs.setdefault("cell_style", "Row, time")
         super(TimeColumn, self).__init__(**kwargs)
 
     def from_excel(self, cell, value):
@@ -536,10 +583,10 @@ class FormulaColumn(TableColumn):
 
         super(FormulaColumn, self).__init__(**kwargs)
 
-    def get_value_from_object(self, obj):
+    def get_value_from_object(self, obj, row_type=None):
         return self.formula
 
 
 class EmptyColumn(TableColumn):
-    def get_value_from_object(self, obj):
+    def get_value_from_object(self, obj, row_type=None):
         return None

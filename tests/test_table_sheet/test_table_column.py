@@ -173,13 +173,13 @@ class FloatColumnTestCase(ColumnTestCase):
         self.column = FloatColumn()
 
     def test_default_kwargs(self):
-        self.assertEqual(self.column.row_style, "Row, decimal")
+        self.assertEqual(self.column.cell_style, "Row, decimal")
         self.assertEqual(self.column.default, 0.0)
 
     def test_override_default_kwargs(self):
         column = FloatColumn(default=1.3, row_style="New style")
 
-        self.assertEqual(column.row_style, "New style")
+        self.assertEqual(column.cell_style, "New style")
         self.assertEqual(column.default, 1.3)
 
     def test_to_excel(self):

@@ -6,7 +6,6 @@ from itertools import chain, repeat, groupby
 
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.page import PrintPageSetup
 from openpyxl.worksheet.table import Table
 
 from openpyxl_templates.exceptions import CellExceptions, RowExceptions, SheetException, CellException
@@ -172,7 +171,7 @@ class TableSheet(TemplatedWorksheet):
             if last_column.hidden or last_column.group:
                 raise CannotHideOrGroupLastColumn()
 
-    def add_column(self, column, object_attribute=None, ):
+    def add_column(self, column, object_attribute=None):
         column.column_index = self._column_index
         self._column_index += 1
 
@@ -210,7 +209,7 @@ class TableSheet(TemplatedWorksheet):
         # Register styles
         style_names = set(chain(
             (self.title_style, self.description_style),
-            *((column.row_style, column.header_style) for column in self.columns)
+            *(tuple(column.styles) for column in self.columns)
         ))
 
         existing_names = set(self.workbook.named_styles)
@@ -263,15 +262,22 @@ class TableSheet(TemplatedWorksheet):
     def write_rows(self, worksheet, objects=None):
         self._first_data_cell = None
         cells = None
-        for obj in objects:
-            cells = tuple(column.create_cell(worksheet, column.get_value_from_object(obj)) for column in self.columns)
+        for index, obj in enumerate(objects):
+            row_type = self.row_type(obj, index)
+            cells = tuple(
+                column.create_cell(
+                    worksheet,
+                    column.get_value_from_object(obj, row_type=row_type),
+                    row_type=row_type
+                ) for column in self.columns
+            )
             worksheet.append(cells)
 
             if not self._first_data_cell:
                 self._first_data_cell = cells[0]
 
             for cell, column in zip(cells, self.columns):
-                column.post_process_cell(worksheet, cell)
+                column.post_process_cell(worksheet, cell, row_type=row_type)
 
         if cells:
             self._last_data_cell = cells[-1]
@@ -407,6 +413,9 @@ class TableSheet(TemplatedWorksheet):
 
     def create_object(self, row_number, **data):
         return self.row_class(**data)
+
+    def row_type(self, object, row_number):
+        return type(object)
 
     @property
     def table_name(self):
