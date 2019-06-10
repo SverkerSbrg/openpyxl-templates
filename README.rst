@@ -15,7 +15,7 @@ Openpyxl-templates is an extention to `openpyxl <http://openpyxl.readthedocs.io/
 
 The package is build for developers to be able to implement their own templates but also provides one useful templated sheet. The ``TableSheet`` which makes it significantly easier to read and write data from excel data tabels such as this one:
 
-.. image:: examples/fruit_lovers.png
+.. image:: docs/examples/fruit_lovers.png
 
 The TableSheet provides an easy way of defining columns and handles both styling and conversion to and from excel. See quickstart for a demo.
 
