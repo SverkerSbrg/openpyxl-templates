@@ -121,7 +121,7 @@ class TableSheet(TemplatedWorksheet):
     def __init__(self, sheetname=None, active=None, table_name=None, title_style=None, description_style=None,
                  format_as_table=None, freeze_header=None, hide_excess_columns=None, look_for_headers=None,
                  exception_policy=None, columns=None, print_title_rows=None, print_title_columns=None,
-                 suffix_duplicated_headers=None):
+                 suffix_duplicated_headers=None, freeze_column=None):
         super(TableSheet, self).__init__(sheetname=sheetname, active=active)
 
         self._table_name = table_name
@@ -129,6 +129,7 @@ class TableSheet(TemplatedWorksheet):
         self.description_style = description_style
         self.format_as_table = format_as_table
         self.freeze_header = freeze_header
+        self.freeze_column = freeze_column
         self.hide_excess_columns = hide_excess_columns
         self.look_for_headers = look_for_headers
         self.exception_policy = exception_policy
@@ -206,29 +207,29 @@ class TableSheet(TemplatedWorksheet):
         for column in self.columns:
             column.prepare_worksheet(worksheet)
 
-        # Register styles
-        style_names = set(chain(
-            (self.title_style, self.description_style),
-            *(tuple(column.styles) for column in self.columns)
-        ))
-
-        existing_names = set(self.workbook.named_styles)
-
-        for name in style_names:
-            if name in existing_names:
-                continue
-
-            if name not in self.template_styles:
-                raise TempleteStyleNotFound(name, self.template_styles)
-
-            self.workbook.add_named_style(self.template_styles[name])
+        # # Register styles
+        # style_names = set(chain(
+        #     (self.title_style, self.description_style),
+        #     *(tuple(column.styles) for column in self.columns)
+        # ))
+        #
+        # existing_names = set(self.workbook.named_styles)
+        #
+        # for name in style_names:
+        #     if name in existing_names:
+        #         continue
+        #
+        #     if name not in self.template_styles:
+        #         raise TempleteStyleNotFound(name, self.template_styles)
+        #
+        #     self.workbook.add_named_style(self.template_styles[name])
 
     def write_title(self, worksheet, title=None):
         if not title:
             return
 
         title = WriteOnlyCell(ws=worksheet, value=title)
-        title.style = self.title_style
+        self.template_styles.style_cell(title, self.title_style)
 
         worksheet.append((title,))
 
@@ -237,20 +238,13 @@ class TableSheet(TemplatedWorksheet):
             return
 
         description = WriteOnlyCell(ws=worksheet, value=description)
-        description.style = self.description_style
+        self.template_styles.style_cell(description, self.description_style)
 
         worksheet.append((description,))
 
-        worksheet.merge_cells(
-            start_row=description.row,
-            start_column=description.col_idx,
-            end_row=description.row,
-            end_column=description.col_idx + len(self.columns) - 1
-        )
-
     def write_headers(self, worksheet):
         headers = tuple(
-            column.create_header(worksheet)
+            column.create_header(worksheet, self.template_styles)
             for column in self.columns
         )
 
@@ -267,6 +261,7 @@ class TableSheet(TemplatedWorksheet):
             cells = tuple(
                 column.create_cell(
                     worksheet,
+                    self.template_styles,
                     column.get_value_from_object(obj, row_type=row_type),
                     row_type=row_type
                 ) for column in self.columns
@@ -277,7 +272,7 @@ class TableSheet(TemplatedWorksheet):
                 self._first_data_cell = cells[0]
 
             for cell, column in zip(cells, self.columns):
-                column.post_process_cell(worksheet, cell, row_type=row_type)
+                column.post_process_cell(worksheet, self.template_styles, cell, row_type=row_type)
 
         if cells:
             self._last_data_cell = cells[-1]
@@ -291,6 +286,7 @@ class TableSheet(TemplatedWorksheet):
 
             column.post_process_worksheet(
                 worksheet,
+                self.template_styles,
                 first_row=first_row,
                 last_row=last_row,
                 data_range="%s%s:%s%s" % (column_letter, first_row, column_letter, last_row)

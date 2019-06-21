@@ -8,6 +8,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from openpyxl_templates.exceptions import OpenpyxlTemplateException, CellException
+from openpyxl_templates.styles import ExtendedStyle
 from openpyxl_templates.utils import Typed, FakeCell
 
 
@@ -62,11 +63,11 @@ class TableColumn(object):
     width = Typed("width", expected_types=(int, float), value=DEFAULT_COLUMN_WIDTH * 2)
     hidden = Typed("hidden", expected_type=bool, value=False)
     group = Typed("group", expected_type=bool, value=False)
-    header_style = Typed("header_style", expected_type=str, value="Header")
+    header_style = Typed("header_style", expected_types=[str, ExtendedStyle], value="Header")
     freeze = Typed("freeze", expected_type=bool, value=False)
 
     # Cell rendering properties
-    cell_style = Typed("cell_style", expected_type=str, value="Row")
+    cell_style = Typed("cell_style", expected_types=[str, ExtendedStyle], value="Row")
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
     conditional_formatting = Typed("conditional_formatting", expected_type=Rule, allow_none=True)
 
@@ -96,6 +97,8 @@ class TableColumn(object):
         self._object_attribute = object_attribute
         self.source = source
 
+        if type(header_style) == ExtendedStyle and header_style.base is None:
+            header_style.base = self.header_style
         self.header_style = header_style
 
         self.getter = getter or self.getter
@@ -169,23 +172,23 @@ class TableColumn(object):
             if data_validation:
                 worksheet.add_data_validation(data_validation)
 
-    def create_header(self, worksheet):
+    def create_header(self, worksheet, style_set):
         header = WriteOnlyCell(ws=worksheet, value=self.header)
         if self.header_style:
-            header.style = self.header_style
+            style_set.style_cell(header, self.header_style)
         return header
 
-    def create_cell(self, worksheet, value=None, row_type=None):
+    def create_cell(self, worksheet, style_set, value=None, row_type=None):
         cell = WriteOnlyCell(
             worksheet,
             value=self._to_excel(value if value is not None else self.default, row_type=row_type)
         )
         cell_style = self.cell_styles[row_type]
         if cell_style:
-            cell.style = cell_style
+            style_set.style_cell(cell, cell_style)
         return cell
 
-    def post_process_cell(self, worksheet, cell, row_type=None):
+    def post_process_cell(self, worksheet, style_set, cell, row_type=None):
         data_validation = self.data_validations[row_type]
         if data_validation:
             data_validation.add(cell)
@@ -194,7 +197,7 @@ class TableColumn(object):
         if conditional_formatting:
             worksheet.conditional_formatting.add(cell, conditional_formatting)
 
-    def post_process_worksheet(self, worksheet, first_row, last_row, data_range):
+    def post_process_worksheet(self, worksheet, style_set, first_row, last_row, data_range):
         column_dimension = worksheet.column_dimensions[self.column_letter]
 
         # Hiding of grouped columns is handled on worksheet level.

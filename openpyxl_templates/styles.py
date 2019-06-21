@@ -20,7 +20,7 @@ class ExtendedStyle(dict):
         super(ExtendedStyle, self).__init__()
 
         self.base = base
-        self.name = name
+        self.name = name if not callable(name) else name(self.base)
         self.font = font
         self.fill = fill
         self.border = border
@@ -105,10 +105,25 @@ class StyleSet(object):
             raise ValueError("Style already exists")
 
         self._styles[style.name] = style
+        return style
 
     @property
     def names(self):
         return tuple(style.name for style in self._styles.values())
+
+    def extend(self, extended_style):
+        return self._add(extended_style)
+
+    def style_cell(self, cell, style):
+        if type(style) in (NamedStyle, ExtendedStyle):
+            if style.name not in self:
+                named_style = self._add(style)
+            else:
+                named_style = self[style.name]
+        else:
+            named_style = self[style]
+        cell.style = named_style
+
 
 
 class DefaultStyleSet(StyleSet):
