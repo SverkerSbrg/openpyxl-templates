@@ -1,9 +1,11 @@
+from copy import copy
 from datetime import date, datetime, timedelta, time
 from types import FunctionType
 
 from collections import Iterable, defaultdict
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.formatting import Rule
+from openpyxl.styles import NamedStyle
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -36,7 +38,7 @@ class BlankNotAllowed(CellException):
 
 
 class RowStyle:
-    cell_style = Typed("cell_style", expected_type=str, allow_none=True)
+    cell_style = Typed("cell_style", expected_types=[str, NamedStyle, ExtendedStyle], allow_none=True)
     data_validation = Typed("data_validation", expected_type=DataValidation, allow_none=True)
     conditional_formatting = Typed("conditional_formatting", expected_type=Rule, allow_none=True)
 
@@ -113,23 +115,31 @@ class TableColumn(object):
         self.conditional_formatting = conditional_formatting
         self.conditional_formattings = defaultdict(lambda: self.conditional_formatting)
 
-        for row_style in row_styles or self.row_styles or []:
+        self.add_row_style(*(row_styles or self.row_styles or []))
+
+        self.freeze = freeze
+
+    def add_row_style(self, *row_styles):
+        for row_style in row_styles:
             row_type = row_style.row_type
             if row_style.getter is not None:
                 self.getters[row_type] = row_style.getter
-            if row_style.cell_style is not None:
-                self.cell_styles[row_type] = row_style.cell_style
+
+            cell_style = row_style.cell_style
+            if cell_style is not None:
+                cell_style = copy(cell_style)
+                if type(cell_style) == ExtendedStyle and not cell_style.base:
+                    cell_style.base = self.cell_style if type(self.cell_style) == str else self.cell_style.name
+                self.cell_styles[row_type] = cell_style
             if row_style.data_validation is not None:
                 self.data_validations[row_type] = row_style.data_validation
             if row_style.conditional_formatting is not None:
                 self.conditional_formattings[row_type] = row_style.conditional_formatting
 
-        self.freeze = freeze
-
     def get_value_from_object(self, obj, row_type=None):
         getter = self.getters[row_type]
         if getter:
-            return self.getter(obj)
+            return getter(self, obj)
 
         if isinstance(obj, (list, tuple)):
             return obj[self.column_index - 1]

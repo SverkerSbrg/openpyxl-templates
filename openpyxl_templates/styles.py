@@ -14,19 +14,28 @@ class ParentForExtendedStyleNotFound(KeyError):
         super(ParentForExtendedStyleNotFound, self).__init__("Base style '%s' for ExtendedStyle '%s' not found." % (extended_style.base, extended_style.name))
 
 
-class ExtendedStyle(dict):
+class ExtendedStyle:
     def __init__(self, base, name, font=None, fill=None, border=None, alignment=None, number_format=None,
                  protection=None):
         super(ExtendedStyle, self).__init__()
 
         self.base = base
-        self.name = name if not callable(name) else name(self.base)
+        self.name = name
         self.font = font
         self.fill = fill
         self.border = border
         self.alignment = alignment
         self.number_format = number_format
         self.protection = protection
+
+    @property
+    def name(self):
+        return self._name if not callable(self._name) else self._name(self.base or "")
+
+    @name.setter
+    def name(self, value):
+        if value:
+            self._name = value
 
     def extend(self, parent):
         return NamedStyle(
@@ -52,6 +61,9 @@ class ExtendedStyle(dict):
         if update:
             kwargs.update({key: value for key, value in update.items() if value is not None})
         return object_class(**kwargs)
+
+    def __str__(self):
+        return "ExtendedStyle(%s, %s)" % (self.base, self._name)
 
 
 class StyleSet(object):
@@ -122,8 +134,9 @@ class StyleSet(object):
                 named_style = self[style.name]
         else:
             named_style = self[style]
-        cell.style = named_style
 
+        # print("    style cell", named_style.name, type(style), style.name if type(style)!= str else "")
+        cell.style = named_style
 
 
 class DefaultStyleSet(StyleSet):

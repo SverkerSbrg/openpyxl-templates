@@ -99,6 +99,7 @@ class TableSheet(TemplatedWorksheet):
     freeze_column = Typed("freeze_column", expected_types=[int, bool], value=False)
     print_title_columns = Typed("print_title_columns", expected_types=[str, int, bool], value=False, allow_none=True)
     hide_excess_columns = Typed("hide_excess_columns", expected_type=bool, value=True)
+    row_styles = None
 
     # print_setup = Typed("print_setup", expected_types=PrintPageSetup, value=None, allow_none=True)
     # fit_to_width = Typed("fit_to_width", expected_types=)
@@ -121,7 +122,7 @@ class TableSheet(TemplatedWorksheet):
     def __init__(self, sheetname=None, active=None, table_name=None, title_style=None, description_style=None,
                  format_as_table=None, freeze_header=None, hide_excess_columns=None, look_for_headers=None,
                  exception_policy=None, columns=None, print_title_rows=None, print_title_columns=None,
-                 suffix_duplicated_headers=None, freeze_column=None):
+                 suffix_duplicated_headers=None, freeze_column=None, row_styles=None):
         super(TableSheet, self).__init__(sheetname=sheetname, active=active)
 
         self._table_name = table_name
@@ -141,9 +142,11 @@ class TableSheet(TemplatedWorksheet):
         self._column_headers_counter = Counter()
         for object_attribute, column in self._items.items():
             self.add_column(column, object_attribute=object_attribute)
+        self.row_styles = row_styles or self.row_styles or []
 
         for column in columns or []:
             self.add_column(column)
+        self.add_row_style(*self.row_styles)
 
         self._validate()
 
@@ -182,12 +185,20 @@ class TableSheet(TemplatedWorksheet):
         self.columns.append(column)
         self._row_class = None
 
+        column.add_row_style(*self.row_styles)
+
         # Suffix duplicated column headers
         self._column_headers_counter[column.header] += 1
         if self._column_headers_counter[column.header] > 1 and self.suffix_duplicated_headers:
             column._header = "%s %d" % (column.header, self._headers[column.header])
 
         return column
+
+    def add_row_style(self, *row_styles):
+        for column in self.columns:
+            column.add_row_style(*row_styles)
+
+        self.row_styles.extend(row_styles)
 
     def write(self, objects=None, title=None, description=None, preserve=False):
         if not self.empty:
@@ -206,23 +217,6 @@ class TableSheet(TemplatedWorksheet):
     def prepare_worksheet(self, worksheet):
         for column in self.columns:
             column.prepare_worksheet(worksheet)
-
-        # # Register styles
-        # style_names = set(chain(
-        #     (self.title_style, self.description_style),
-        #     *(tuple(column.styles) for column in self.columns)
-        # ))
-        #
-        # existing_names = set(self.workbook.named_styles)
-        #
-        # for name in style_names:
-        #     if name in existing_names:
-        #         continue
-        #
-        #     if name not in self.template_styles:
-        #         raise TempleteStyleNotFound(name, self.template_styles)
-        #
-        #     self.workbook.add_named_style(self.template_styles[name])
 
     def write_title(self, worksheet, title=None):
         if not title:
