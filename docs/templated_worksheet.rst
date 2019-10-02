@@ -3,7 +3,7 @@
 ==================
 TemplatedWorksheet
 ==================
-The TemplatedWorksheet describes a a sheet in an excel file and is the bare bone used for building useful sheet templates such as the :ref:`TableSheet <TableSheet>`. A TemplatedWorksheet  is defined by following attributes:
+The TemplatedWorksheet describes a sheet in an excel file and is the bare bone used for building useful sheet templates such as the :ref:`TableSheet <TableSheet>`. A TemplatedWorksheet  is defined by following attributes:
 
     * It's ``sheetname`` which is used for identifying the sheets in the excel file
     * It's ``read()`` method which when implemented should return the relevant data contained in the sheet
