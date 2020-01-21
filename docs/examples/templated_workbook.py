@@ -8,7 +8,7 @@ class DemoTemplatedWorkbook(TemplatedWorkbook):
 
 templated_workbook = DemoTemplatedWorkbook()
 
-templated_workbook = DemoTemplatedWorkbook(filename="my_excel.xlsx")
+templated_workbook = DemoTemplatedWorkbook(file="my_excel.xlsx")
 
 
 for templated_worksheet in templated_workbook.templated_sheets:
