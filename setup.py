@@ -30,7 +30,8 @@ setup(
     zip_safe=False,
     install_requires=[
         "openpyxl",
-        "fortnum"
+        "fortnum",
+        "future"
     ],
     include_package_data=True,
     classifiers=[
