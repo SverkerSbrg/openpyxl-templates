@@ -1,6 +1,5 @@
 from copy import copy
 from datetime import date, datetime, timedelta, time
-from types import FunctionType
 
 from collections import Iterable, defaultdict
 from openpyxl.cell import WriteOnlyCell

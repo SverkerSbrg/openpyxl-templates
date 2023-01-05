@@ -1,2 +1,1 @@
 openpyxl==2.4.7
-fortnum==0.0.9
