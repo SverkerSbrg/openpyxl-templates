@@ -1,5 +1,3 @@
-from future.utils import with_metaclass
-
 from openpyxl_templates.exceptions import OpenpyxlTemplateException
 from openpyxl_templates.utils import OrderedType, Typed
 
@@ -25,7 +23,7 @@ class SheetnameNotSet(OpenpyxlTemplateException):
             "Sheetname not specified. This should be done automatically by the TemplatedWorkbook.")
 
 
-class TemplatedWorksheet(with_metaclass(OrderedType)):
+class TemplatedWorksheet(metaclass=OrderedType):
     _sheetname = Typed("_sheetname", expected_type=str, allow_none=True)
     active = Typed("active", expected_type=bool, value=False)
     _workbook = None

@@ -8,7 +8,6 @@ from openpyxl_templates.styles import DefaultStyleSet, StyleSet
 from openpyxl_templates.templated_sheet import TemplatedWorksheet
 from openpyxl_templates.utils import OrderedType, Typed
 
-from future.utils import with_metaclass
 
 
 class SheetnamesNotUnique(OpenpyxlTemplateException):
@@ -23,7 +22,7 @@ class MultipleActiveSheets(OpenpyxlTemplateException):
             "The TemplatedWorkbook '%s' has multiple active sheets." % type(templated_workbook).__name__)
 
 
-class TemplatedWorkbook(with_metaclass(OrderedType)):
+class TemplatedWorkbook(metaclass=OrderedType):
     item_class = TemplatedWorksheet
 
     templated_sheets = None
