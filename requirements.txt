@@ -1,3 +1,1 @@
 openpyxl==2.4.7
-fortnum==0.0.9
-future==0.16.0
