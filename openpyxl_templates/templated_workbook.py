@@ -8,6 +8,8 @@ from openpyxl_templates.styles import DefaultStyleSet, StyleSet
 from openpyxl_templates.templated_sheet import TemplatedWorksheet
 from openpyxl_templates.utils import OrderedType, Typed
 
+from future.utils import with_metaclass
+
 
 class SheetnamesNotUnique(OpenpyxlTemplateException):
     def __init__(self, templated_workbook):
@@ -21,7 +23,7 @@ class MultipleActiveSheets(OpenpyxlTemplateException):
             "The TemplatedWorkbook '%s' has multiple active sheets." % type(templated_workbook).__name__)
 
 
-class TemplatedWorkbook(metaclass=OrderedType):
+class TemplatedWorkbook(with_metaclass(OrderedType)):
     item_class = TemplatedWorksheet
 
     templated_sheets = None
@@ -93,8 +95,7 @@ class TemplatedWorkbook(metaclass=OrderedType):
             del self.workbook[sheetname]
 
     def save(self, filename):
-        if self.timestamp:
-            filename = self.timestamp_filename(filename)
+        filename = self.timestamp_filename(filename)
 
         self.sort_worksheets()
 
@@ -125,15 +126,17 @@ class TemplatedWorkbook(metaclass=OrderedType):
         self.workbook.active = active_index
 
     def timestamp_filename(self, filename):
-        return "%s_%s.%s" % (
-            filename.strip(".%s" % self._file_extension),
-            datetime.now().strftime(
-                self.timestamp
-                if isinstance(self.timestamp, str)
-                else self._default_timestamp
-            ),
-            self._file_extension
-        )
+        if self.timestamp:
+            return "%s_%s.%s" % (
+                filename.strip(".%s" % self._file_extension),
+                datetime.now().strftime(
+                    self.timestamp
+                    if isinstance(self.timestamp, str)
+                    else self._default_timestamp
+                ),
+                self._file_extension
+            )
+        return filename
 
     @property
     def sheetnames(self):

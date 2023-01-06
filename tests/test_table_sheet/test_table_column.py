@@ -164,7 +164,7 @@ class BooleanColumnTests(ColumnTestCase):
             self.assertToExcel(excel, internal, column=column)
 
     def test_create_cell_only_use_default_on_None(self):
-        column = BoolColumn(object_attribute="test", row_style="")
+        column = BoolColumn(object_attribute="test")
         self.assertEqual(column.create_cell(Workbook().active, False).value, column.excel_false)
 
 

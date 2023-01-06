@@ -1,5 +1,6 @@
 from copy import copy
 from datetime import date, datetime, timedelta, time
+from types import FunctionType
 
 from collections import Iterable, defaultdict
 from openpyxl.cell import WriteOnlyCell
@@ -204,7 +205,7 @@ class TableColumn(object):
 
         conditional_formatting = self.conditional_formattings[row_type]
         if conditional_formatting:
-            worksheet.conditional_formatting.add(cell, conditional_formatting)
+            worksheet.conditional_formatting.add(cell.coordinate, conditional_formatting)
 
     def post_process_worksheet(self, worksheet, style_set, first_row, last_row, data_range):
         column_dimension = worksheet.column_dimensions[self.column_letter]

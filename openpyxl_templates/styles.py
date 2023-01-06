@@ -158,8 +158,7 @@ class DefaultStyleSet(StyleSet):
             ExtendedStyle(
                 base="Empty",
                 name="Description",
-                font={"color": "FF777777"},
-                alignment={"wrap_text": True}
+                font={"color": "FF777777"}
             ),
             ExtendedStyle(
                 base="Default",
